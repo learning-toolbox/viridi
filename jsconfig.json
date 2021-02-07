@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "checkJs": true,
+    "moduleResolution": "node"
+  },
+  "include": ["viridi-plugin/**/*", "src/**/*", "main.js"],
+  "exclude": ["node_modules"]
+}
