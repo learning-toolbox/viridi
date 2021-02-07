@@ -1,24 +1,16 @@
-import MarkdownIt from 'markdown-it';
-import anchor from 'markdown-it-anchor';
-import { slugify } from './plugins/slugify';
+/** @typedef {(path: string, content: string) => FullPage} RenderPage */
 
 /**
- * @return {ReturnType<typeof import('markdown-it')>}
+ * @return {RenderPage}
  */
-export function createMarkdownRenderer() {
-  const md = MarkdownIt({
-    html: true,
-    linkify: true,
-    typographer: true,
-  });
-
-  md.use(anchor, {
-    slugify,
-    permalink: true,
-    permalinkBefore: true,
-    permalinkSymbol: '#',
-    permalinkAttrs: () => ({ 'aria-hidden': true }),
-  });
-
-  return md;
+export function createPageRenderer() {
+  return (path, content) => {
+    return {
+      path,
+      title: '',
+      subtitle: '',
+      content: '',
+      backlinks: [],
+    };
+  };
 }

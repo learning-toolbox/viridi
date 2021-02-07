@@ -1,17 +1,4 @@
 /**
- * @typedef {object} Page
- * @property {string} path
- * @property {string} title
- * @property {string[]} backlinks
- */
-
-/** @typedef {Page & { content: string }} FullPage */
-
-/** @typedef {Record<string, Page>} Pages */
-
-/** @typedef {(page: FullPage, pages: Pages) => void} RouteListener */
-
-/**
  * @typedef {object} Router
  * @property {(path: string) => Promise<void>} go
  * @property {(listener: RouteListener) => void} onRouteChange
@@ -19,10 +6,6 @@
 
 /** @type {Pages} */
 let pages = /* pages */;
-
-/** @type {Record<string, Promise<FullPage>>} */
-// @ts-ignore
-//const fullPages = import.meta.glob(/* globPattern */);
 
 /** @type {RouteListener[]} */
 const routeListeners = [];

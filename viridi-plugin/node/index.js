@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import glob from 'fast-glob';
+import { createPageRenderer } from './markdown';
 
 const viridiFileID = 'viridi';
 const routerPath = path.resolve('./viridi-plugin/client/router.js');
@@ -15,10 +16,8 @@ const routerPath = path.resolve('./viridi-plugin/client/router.js');
  * @return {import('vite').Plugin}
  */
 export function viridiPlugin(config) {
-  // TODO: parse all Markdown files
-  const files = glob.sync(`./**/*.md`, {
-    ignore: ['node_modules/**/*'],
-  });
+  const renderPage = createPageRenderer();
+  const pages = parseMarkdownFiles(renderPage);
 
   return {
     name: 'vite-plugin-viridi',
@@ -46,4 +45,21 @@ export function viridiPlugin(config) {
       }
     },
   };
+}
+
+/**
+ * @param {import('./markdown').RenderPage} renderPage
+ * @returns {FullPages}
+ */
+function parseMarkdownFiles(renderPage) {
+  return glob
+    .sync(`./**/*.md`, { ignore: ['node_modules/**/*'] })
+    .map((filePath) => {
+      const content = fs.readFileSync(filePath, { encoding: 'utf8' });
+      return renderPage(filePath, content);
+    })
+    .reduce((acc, page) => {
+      acc[page.path] = page;
+      return acc;
+    }, {});
 }
