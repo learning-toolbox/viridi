@@ -1,4 +1,3 @@
-// @ts-ignore
 import { router } from 'viridi';
 
 router.onRouteChange((fullPage, pages) => {

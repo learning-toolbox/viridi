@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "es2019",
+    "baseUrl": ".",
+    "outDir": "../../dist/node",
+    "module": "commonjs",
+    "lib": ["ESNext", "DOM"],
+    "sourceMap": true,
+    "paths": {
+      "/@types/*": ["../../types/*"]
+    }
+  },
+  "include": [
+    ".",
+    "../../types/shared.d.ts"
+  ]
+}
