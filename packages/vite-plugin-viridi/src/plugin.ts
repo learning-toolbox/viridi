@@ -1,23 +1,21 @@
 import fs from 'fs';
 import { Plugin } from 'vite';
+import { getGitHistoryData } from './git';
 import { createPageRenderer, parseMarkdownFiles, RenderPage } from './markdown';
-import { FullPages, PagePathToIdMap, UserConfig, Config } from './types';
-import { normalizeFilePath } from './utils';
+import { FullPages, PagePathToIdMap, UserConfig, Config, FullPage } from './types';
+import { resolvePage } from './utils';
 
 const viridiFileID = '@viridi';
 
-function resolveConfig(userConfig: UserConfig = {}, root: string): Config {
-  const defaultConfig: Config = {
-    root,
-    directory: '',
-    history: false,
-  };
-
+function resolveConfig({ directory, gitHistory }: UserConfig = {}, root: string): Config {
   return {
-    ...defaultConfig,
-    ...userConfig,
+    root,
+    directory,
+    history: gitHistory === true ? {} : gitHistory === false ? undefined : gitHistory,
   };
 }
+
+const virtualMarkdownRE = /^(.+\.md)\?(\w+)$/;
 
 export function viridiPlugin(userConfig?: UserConfig): Plugin {
   let config: Config;
@@ -47,54 +45,71 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
 
         return createPagesModule(config, fullPages);
       }
+
+      // TODO: refactor this logic
+      if (config.history !== undefined) {
+        const [_, path, commit] = virtualMarkdownRE.exec(id) || [];
+        if (path !== undefined && commit !== undefined) {
+          const page = resolvePage(path, config.root, pathToIdMap, fullPages);
+          const history = page.history?.find((log) => log.commit === commit);
+          try {
+            if (history !== undefined) {
+              if (history.data === undefined) {
+                const markdown = await getGitHistoryData(page.path, commit);
+                // TODO: render markdown
+                history.data = { content: markdown };
+              }
+              return `export default Object.freeze(${JSON.stringify(history.data)});`;
+            } else {
+              throw undefined;
+            }
+          } catch (error) {
+            throw new Error(`Commit '${commit}' not found for markdown file '${id}'.`);
+          }
+        }
+      }
     },
 
     async transform(content, id) {
       if (id.endsWith('.md')) {
         if (fullPages === undefined || pathToIdMap === undefined) {
           throw new Error(
-            `viridi: It *appears* that you are trying to directly import a markdown file. Viridi handles that for you.`
+            `It *appears* that you are trying to directly import a markdown file. Viridi handles that for you.`
           );
         }
 
-        const path = normalizeFilePath(config.root, id);
-        const pageId = pathToIdMap[path];
-        const page = fullPages[pageId];
+        const page = resolvePage(id, config.root, pathToIdMap, fullPages);
 
         page.content = '';
         page.prompts = [];
         for (const backlinkId of page.backlinkIds) {
           const linkedPage = fullPages[backlinkId];
-          linkedPage.backlinkIds.splice(linkedPage.backlinkIds.indexOf(pageId), 1);
+          linkedPage.backlinkIds.splice(linkedPage.backlinkIds.indexOf(page.id), 1);
         }
 
-        renderPage(path, content, fullPages, pathToIdMap);
+        await renderPage(id, content, fullPages, pathToIdMap);
 
-        const stats = fs.statSync(id);
-        page.lastUpdated = Math.round(stats.mtimeMs);
-
-        return `export default ${JSON.stringify({
+        return `export default Object.freeze(${JSON.stringify({
           content: page.content,
           prompts: page.prompts,
-        })}`;
+        })});`;
       }
     },
 
-    // handleHotUpdate(ctx) {
-    //   console.log(ctx.file);
-    // },
+    // TODO: look into better HMR
+    // handleHotUpdate(ctx) {},
   };
 }
 
 // Use glob import to dynamically import all data for each markdown page.
-function createPagesModule(config: Config, fullPages: FullPages): string {
+function createPagesModule({ directory, history }: Config, fullPages: FullPages): string {
   return `
-const pages = import.meta.glob('${config.directory}/**/*.md');
+const pages = import.meta.glob('${directory ? '/' + directory : ''}/**/*.md');
 
 const fullPages = {
 ${Object.values(fullPages)
   .map((page) => {
-    const { id, title, path, backlinkIds, url, lastUpdated, created } = page;
+    const { id, title, path, backlinkIds, url, lastModified, created } = page;
     return `  ${id}: Object.freeze({
     id: ${id},
     title: '${title}',
@@ -104,20 +119,42 @@ ${Object.values(fullPages)
     get backlinks() {
       return this.backlinkIds.map(id => fullPages[id]);
     },
-    get lastUpdated() {
-      return new Date(${lastUpdated});
+    get lastModified() {
+      return new Date('${lastModified}');
     },
     get created() {
-      return new Date(${created});
+      return new Date('${created}');
     },
     async data() {
       const { default: data } = await pages[this.path]();
       return data;
     },
+    history: ${createHistoryList(page)},
   }),`;
   })
   .join('\n')}
 };
 
 export default Object.freeze(fullPages);`;
+}
+
+function createHistoryList(page: FullPage): string {
+  if (!page.history) {
+    return 'undefined';
+  }
+  return `[${page.history
+    .map(
+      ({ commit, modified, author }) => `Object.freeze({
+      commit: '${commit}',
+      authur: '${author}',
+      get modified() {
+        return new Date('${modified}');
+      },
+      async data() {
+        const {default: data} = await import('${page.path}?${commit}');
+        return data
+      },
+    }),`
+    )
+    .join('\n')}]`;
 }

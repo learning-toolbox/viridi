@@ -20,7 +20,7 @@ async function renderPage(page: FullPage) {
       </nav>
       <h1>${page.title}</h1>
       <div>Created: ${page.created.toLocaleDateString('default', dateOptions)}</div>
-      <div>Last Updated: ${page.lastUpdated.toLocaleDateString('default', dateOptions)}</div>
+      <div>Last Updated: ${page.lastModified.toLocaleDateString('default', dateOptions)}</div>
       ${content}
     `;
   }
@@ -29,4 +29,10 @@ async function renderPage(page: FullPage) {
 (async () => {
   const page = Object.values(pages)[0];
   renderPage(page);
+
+  if (page.history) {
+    for (const log of page.history) {
+      console.log(await log.data());
+    }
+  }
 })();

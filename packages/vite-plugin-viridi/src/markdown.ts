@@ -6,29 +6,34 @@ import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
 import { Config, FullPages, PageId, PagePathToIdMap, Prompt } from './types';
-import { cyrb53Hash, extractTitleFromPath, normalizeFilePath, normalizeURL } from './utils';
+import {
+  cyrb53Hash,
+  extractTitleFromPath,
+  normalizeFilePath,
+  normalizeURL,
+  resolvePage,
+} from './utils';
+import { getGitHistory, getLatestCommit } from './git';
 
 export type RenderPage = (
   path: string,
   content: string,
   pages: FullPages,
   pathToIdMap: Record<string, number>
-) => void;
+) => Promise<void>;
 
-export function createPageRenderer({ root }: Config): RenderPage {
+export function createPageRenderer(config: Config): RenderPage {
   const md = unified()
     .use(remarkParse)
     .use(wikiLinkPlugin, {
       hrefTemplate: (permalink: string) => `/${permalink}`,
     })
     .use(html, { sanitize: true });
-  return (path, content, pages, pathToIdMap) => {
-    const normalizedPath = normalizeFilePath(root, path);
-    const id = pathToIdMap[normalizedPath];
+  return async (path, content, pages, pathToIdMap) => {
     const parseTree = md.parse(content);
     const { links, prompts } = parseMarkdownTree(parseTree, pathToIdMap);
 
-    const page = pages[id];
+    const page = resolvePage(path, config.root, pathToIdMap, pages);
     page.content = md.stringify(parseTree);
     page.prompts = prompts;
 
@@ -36,6 +41,32 @@ export function createPageRenderer({ root }: Config): RenderPage {
       const linkedPage = pages[link];
       if (!linkedPage?.backlinkIds.includes(link)) {
         linkedPage.backlinkIds.push(link);
+      }
+    }
+
+    if (config.history && page.history === undefined) {
+      page.history = await getGitHistory(path, config.history);
+    }
+
+    const lastestCommit = await getLatestCommit(path);
+    if (page.lastModified === '') {
+      if (lastestCommit !== null) {
+        page.lastModified = lastestCommit.modified;
+      } else {
+        const stats = fs.statSync(path);
+        page.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
+      }
+    } else {
+      const stats = fs.statSync(path);
+      page.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
+
+      // If the file has been modified since the last commit show the last commit in history
+      if (
+        config.history &&
+        lastestCommit !== null &&
+        page.history?.[0]?.commit !== lastestCommit.commit
+      ) {
+        page.history?.unshift(lastestCommit);
       }
     }
   };
@@ -52,11 +83,13 @@ function parseMarkdownTree(
   };
 }
 
-export async function parseMarkdownFiles({ root }: Config, renderPage: RenderPage) {
+export async function parseMarkdownFiles({ root, directory }: Config, renderPage: RenderPage) {
   const fullPages: FullPages = {};
   // uses normalized paths
   const pathToIdMap: PagePathToIdMap = {};
-  const pagePaths = glob.sync(`${root}/**/*.md`, { ignore: ['node_modules/**/*'] });
+  const pagePaths = glob.sync(`${root}/${directory ? directory + '/' : ''}**/*.md`, {
+    ignore: ['node_modules/**/*'],
+  });
   for (const path of pagePaths) {
     const normalizedPath = normalizeFilePath(root, path);
     const id = cyrb53Hash(path);
@@ -64,13 +97,13 @@ export async function parseMarkdownFiles({ root }: Config, renderPage: RenderPag
     pathToIdMap[normalizedPath] = id;
     const stats = fs.statSync(path);
 
-    // Create and empty page
+    // Create an empty page
     fullPages[id] = {
       id,
       path: normalizedPath,
       url,
-      lastUpdated: Math.round(stats.mtimeMs),
-      created: Math.round(stats.birthtimeMs),
+      lastModified: '',
+      created: new Date(Math.round(stats.birthtimeMs)).toString(),
       title: extractTitleFromPath(url),
       content: '',
       prompts: [],
@@ -81,7 +114,7 @@ export async function parseMarkdownFiles({ root }: Config, renderPage: RenderPag
   await Promise.all(
     pagePaths.map(async (filePath) => {
       const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
-      renderPage(filePath, content, fullPages, pathToIdMap);
+      await renderPage(filePath, content, fullPages, pathToIdMap);
     })
   );
 

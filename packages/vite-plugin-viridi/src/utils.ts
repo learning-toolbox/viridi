@@ -1,4 +1,5 @@
 import startCase from 'lodash.startcase';
+import { FullPage, FullPages, PagePathToIdMap } from './types';
 
 // A hash function
 export function cyrb53Hash(str: string, seed: number = 0): number {
@@ -30,4 +31,21 @@ export function normalizeURL(root: string, path: string): string {
 
 export function extractTitleFromPath(path: string): string {
   return startCase(path.slice(path.lastIndexOf('/') + 1));
+}
+
+export function resolvePage(
+  path: string,
+  root: string,
+  pathToIdMap: PagePathToIdMap,
+  fullPages: FullPages
+): FullPage {
+  const normalizedPath = normalizeFilePath(root, path);
+  const pageId = pathToIdMap[normalizedPath];
+  const page = fullPages[pageId];
+
+  if (page === undefined) {
+    throw new Error(`Markdown file not found: '${path}'.`);
+  }
+
+  return page;
 }

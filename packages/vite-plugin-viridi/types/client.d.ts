@@ -1,12 +1,21 @@
-import { Page, PageData } from './shared';
+import { HistoryData, Page, PageData } from './shared';
 
-export type FullPage = Page & {
-  readonly backlinks: FullPage[];
-  data: () => Promise<PageData>;
-  lastUpdated: Date;
-  created: Date;
+export type History = {
+  commit: string;
+  modified: Date;
+  author: string;
+  data: () => Promise<Readonly<HistoryData>>;
 };
 
-export type FullPages = Record<string, FullPage>;
+export type FullPage = Readonly<Page> &
+  Readonly<{
+    readonly backlinks: FullPage[];
+    data: () => Promise<Readonly<PageData>>;
+    lastModified: Date;
+    created: Date;
+    history?: Readonly<History>[];
+  }>;
+
+export type FullPages = Readonly<Record<string, FullPage>>;
 
 export * from './shared';

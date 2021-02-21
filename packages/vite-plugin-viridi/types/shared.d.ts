@@ -27,3 +27,7 @@ export type PageData = {
   content: string;
   prompts: Prompt[];
 };
+
+export type HistoryData = {
+  content: string;
+};

@@ -1,0 +1,1 @@
+# Viridi Vite Plugin Demo
