@@ -1,17 +1,17 @@
 import fs from 'fs';
 import { Plugin } from 'vite';
-import { getGitHistoryData } from './git';
-import { createPageRenderer, parseMarkdownFiles, RenderPage } from './markdown';
-import { FullPages, PagePathToIdMap, UserConfig, Config, FullPage } from './types';
-import { resolvePage } from './utils';
+import { getFileLogData } from './git';
+import { createNoteRenderer, parseNotes, RenderNote } from './markdown';
+import { Notes, NotePathToIdMap, UserConfig, Config, Note } from './types';
+import { resolveNote } from './utils';
 
 const viridiFileID = '@viridi';
 
-function resolveConfig({ directory, gitHistory }: UserConfig = {}, root: string): Config {
+function resolveConfig({ directory, gitLogs }: UserConfig = {}, root: string): Config {
   return {
     root,
     directory,
-    history: gitHistory === true ? {} : gitHistory === false ? undefined : gitHistory,
+    logs: gitLogs === true ? {} : gitLogs === false ? undefined : gitLogs,
   };
 }
 
@@ -19,16 +19,16 @@ const virtualMarkdownRE = /^(.+\.md)\?(\w+)$/;
 
 export function viridiPlugin(userConfig?: UserConfig): Plugin {
   let config: Config;
-  let fullPages: FullPages;
-  let pathToIdMap: PagePathToIdMap;
-  let renderPage: RenderPage;
+  let notes: Notes;
+  let pathToIdMap: NotePathToIdMap;
+  let renderNote: RenderNote;
 
   return {
     name: 'vite-plugin-viridi',
 
     configResolved(resolvedConfig) {
       config = resolveConfig(userConfig, resolvedConfig.root);
-      renderPage = createPageRenderer(config);
+      renderNote = createNoteRenderer(config);
     },
 
     resolveId(id) {
@@ -39,32 +39,32 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
 
     async load(id) {
       if (id === viridiFileID) {
-        if (fullPages === undefined || pathToIdMap === undefined) {
-          ({ fullPages, pathToIdMap } = await parseMarkdownFiles(config, renderPage));
+        if (notes === undefined || pathToIdMap === undefined) {
+          ({ notes, pathToIdMap } = await parseNotes(config, renderNote));
         }
 
-        return createPagesModule(config, fullPages);
+        return createNotesModule(config, notes);
       }
 
       // TODO: refactor this logic
-      if (config.history !== undefined) {
+      if (config.logs !== undefined) {
         const [_, path, commit] = virtualMarkdownRE.exec(id) || [];
         if (path !== undefined && commit !== undefined) {
-          const page = resolvePage(path, config.root, pathToIdMap, fullPages);
-          const history = page.history?.find((log) => log.commit === commit);
+          const note = resolveNote(path, config.root, pathToIdMap, notes);
+          const log = note.logs?.find((log) => log.commit === commit);
           try {
-            if (history !== undefined) {
-              if (history.data === undefined) {
-                const markdown = await getGitHistoryData(page.path, commit);
+            if (log !== undefined) {
+              if (log.data === undefined) {
+                const markdown = await getFileLogData(note.path, commit);
                 // TODO: render markdown
-                history.data = { content: markdown };
+                log.data = { content: markdown };
               }
-              return `export default Object.freeze(${JSON.stringify(history.data)});`;
+              return `export default Object.freeze(${JSON.stringify(log.data)});`;
             } else {
               throw undefined;
             }
           } catch (error) {
-            throw new Error(`Commit '${commit}' not found for markdown file '${id}'.`);
+            throw new Error(`Commit '${commit}' not found for note '${id}'.`);
           }
         }
       }
@@ -72,26 +72,26 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
 
     async transform(content, id) {
       if (id.endsWith('.md')) {
-        if (fullPages === undefined || pathToIdMap === undefined) {
+        if (notes === undefined || pathToIdMap === undefined) {
           throw new Error(
             `It *appears* that you are trying to directly import a markdown file. Viridi handles that for you.`
           );
         }
 
-        const page = resolvePage(id, config.root, pathToIdMap, fullPages);
+        const note = resolveNote(id, config.root, pathToIdMap, notes);
 
-        page.content = '';
-        page.prompts = [];
-        for (const backlinkId of page.backlinkIds) {
-          const linkedPage = fullPages[backlinkId];
-          linkedPage.backlinkIds.splice(linkedPage.backlinkIds.indexOf(page.id), 1);
+        note.content = '';
+        note.prompts = [];
+        for (const backlinkId of note.backlinkIds) {
+          const linkedNote = notes[backlinkId];
+          linkedNote.backlinkIds.splice(linkedNote.backlinkIds.indexOf(note.id), 1);
         }
 
-        await renderPage(id, content, fullPages, pathToIdMap);
+        await renderNote(id, content, notes, pathToIdMap);
 
         return `export default Object.freeze(${JSON.stringify({
-          content: page.content,
-          prompts: page.prompts,
+          content: note.content,
+          prompts: note.prompts,
         })});`;
       }
     },
@@ -101,15 +101,15 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
   };
 }
 
-// Use glob import to dynamically import all data for each markdown page.
-function createPagesModule({ directory, history }: Config, fullPages: FullPages): string {
+// Use glob import to dynamically import all data for each note.
+function createNotesModule({ directory, logs }: Config, notes: Notes): string {
   return `
-const pages = import.meta.glob('${directory ? '/' + directory : ''}/**/*.md');
+const notesData = import.meta.glob('${directory ? '/' + directory : ''}/**/*.md');
 
-const fullPages = {
-${Object.values(fullPages)
-  .map((page) => {
-    const { id, title, path, backlinkIds, url, lastModified, created } = page;
+const notes = {
+${Object.values(notes)
+  .map((note) => {
+    const { id, title, path, backlinkIds, url, lastModified, created } = note;
     return `  ${id}: Object.freeze({
     id: ${id},
     title: '${title}',
@@ -117,7 +117,7 @@ ${Object.values(fullPages)
     url: '${url}',      
     backlinkIds: ${JSON.stringify(backlinkIds)},
     get backlinks() {
-      return this.backlinkIds.map(id => fullPages[id]);
+      return this.backlinkIds.map(id => notes[id]);
     },
     get lastModified() {
       return new Date('${lastModified}');
@@ -126,23 +126,23 @@ ${Object.values(fullPages)
       return new Date('${created}');
     },
     async data() {
-      const { default: data } = await pages[this.path]();
+      const { default: data } = await notesData[this.path]();
       return data;
     },
-    history: ${createHistoryList(page)},
+    logs: ${createLogs(note)},
   }),`;
   })
   .join('\n')}
 };
 
-export default Object.freeze(fullPages);`;
+export default Object.freeze(notes);`;
 }
 
-function createHistoryList(page: FullPage): string {
-  if (!page.history) {
+function createLogs(note: Note): string {
+  if (!note.logs) {
     return 'undefined';
   }
-  return `[${page.history
+  return `[${note.logs
     .map(
       ({ commit, modified, author }) => `Object.freeze({
       commit: '${commit}',
@@ -151,7 +151,7 @@ function createHistoryList(page: FullPage): string {
         return new Date('${modified}');
       },
       async data() {
-        const {default: data} = await import('${page.path}?${commit}');
+        const {default: data} = await import('${note.path}?${commit}');
         return data
       },
     }),`

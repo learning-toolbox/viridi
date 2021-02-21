@@ -1,6 +1,6 @@
 declare module '@viridi' {
-  import { FullPages } from '@viridi/vite-plugin/types/client';
-  const pages: FullPages;
-  export default pages;
+  import { Notes } from '@viridi/vite-plugin/types/client';
+  const notes: Notes;
+  export default notes;
   export * from '@viridi/vite-plugin/types/client';
 }

@@ -1,16 +1,13 @@
 import simpleGit from 'simple-git';
-import { History, HistoryOptions, HistoryData } from './types';
+import { LogOptions, NoteLog } from './types';
 
 const git = simpleGit();
 
-export async function getGitHistory(
-  file: string,
-  options: HistoryOptions = {}
-): Promise<History[]> {
+export async function getFileLogs(file: string, options: LogOptions = {}): Promise<NoteLog[]> {
   // Use array options to avoid the '--follow' param
   const result = await git.log([file]);
 
-  const history: History[] = result.all.map(({ hash, date, author_name }) => ({
+  const logs: NoteLog[] = result.all.map(({ hash, date, author_name }) => ({
     commit: hash,
     modified: date,
     author: author_name,
@@ -18,12 +15,12 @@ export async function getGitHistory(
 
   // Remove latest commit since the actual file reflects that change.
   // If the file is modified, then the latest commit should be added to history.
-  history.shift();
+  logs.shift();
 
-  return history;
+  return logs;
 }
 
-export async function getLatestCommit(file: string): Promise<History | null> {
+export async function getLatestCommit(file: string): Promise<NoteLog | null> {
   // Use array options to avoid the '--follow' param
   const result = await git.log([file]);
 
@@ -39,7 +36,7 @@ export async function getLatestCommit(file: string): Promise<History | null> {
   };
 }
 
-export async function getGitHistoryData(path: string, commit: string): Promise<string> {
+export async function getFileLogData(path: string, commit: string): Promise<string> {
   // Use a relative path the to file since since the absolute path could not work if we are in a monorepo.
   return await git.show(`${commit}:.${path}`);
 }

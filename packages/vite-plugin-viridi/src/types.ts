@@ -1,35 +1,35 @@
-import { HistoryData, Page, PageData } from '../types/shared';
+import { NoteLogData, NoteBase, NoteData } from '../types/shared';
 
-export type History = {
+export type NoteLog = {
   commit: string;
   modified: string;
   author: string;
-  data?: HistoryData;
+  data?: NoteLogData;
 };
 
-export type FullPage = Page &
-  PageData & {
+export type Note = NoteBase &
+  NoteData & {
     lastModified: string;
     created: string;
-    history?: History[];
+    logs?: NoteLog[];
   };
 
-export type FullPages = Record<string, FullPage>;
+export type Notes = Record<string, Note>;
 
-export type PagePathToIdMap = Record<Page['path'], Page['id']>;
+export type NotePathToIdMap = Record<Note['path'], Note['id']>;
 
 // TODO
-export type HistoryOptions = {};
+export type LogOptions = {};
 
 export type Config = {
   root: string;
   directory?: string;
-  history?: HistoryOptions;
+  logs?: LogOptions;
 };
 
 export type UserConfig = {
   directory?: string;
-  gitHistory?: boolean | HistoryOptions;
+  gitLogs?: boolean | LogOptions;
 };
 
 export * from '../types/shared';

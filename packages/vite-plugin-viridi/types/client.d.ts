@@ -1,21 +1,21 @@
-import { HistoryData, Page, PageData } from './shared';
+import { NoteLogData, NoteBase, NoteData } from './shared';
 
-export type History = {
+export type NoteLog = {
   commit: string;
   modified: Date;
   author: string;
-  data: () => Promise<Readonly<HistoryData>>;
+  data: () => Promise<Readonly<NoteLogData>>;
 };
 
-export type FullPage = Readonly<Page> &
+export type Note = Readonly<NoteBase> &
   Readonly<{
-    readonly backlinks: FullPage[];
-    data: () => Promise<Readonly<PageData>>;
+    readonly backlinks: Note[];
+    data: () => Promise<Readonly<NoteData>>;
     lastModified: Date;
     created: Date;
-    history?: Readonly<History>[];
+    logs?: Readonly<NoteLog>[];
   }>;
 
-export type FullPages = Readonly<Record<string, FullPage>>;
+export type Notes = Readonly<Record<string, Note>>;
 
 export * from './shared';

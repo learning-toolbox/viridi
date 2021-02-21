@@ -11,23 +11,21 @@ export type ClozeDeletionPrompt = {
   content: string;
 };
 
-export type PageId = number;
+export type NoteId = number;
 
-export type Page = {
-  id: PageId;
+export type NoteBase = {
+  id: NoteId;
   path: string;
   url: string;
   title: string;
-  backlinkIds: PageId[];
+  backlinkIds: NoteId[];
 };
 
-export type Pages = Record<string, Page>;
-
-export type PageData = {
+export type NoteData = {
   content: string;
   prompts: Prompt[];
 };
 
-export type HistoryData = {
+export type NoteLogData = {
   content: string;
 };

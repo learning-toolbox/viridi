@@ -5,68 +5,68 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { Config, FullPages, PageId, PagePathToIdMap, Prompt } from './types';
+import { Config, Notes, NoteId, NotePathToIdMap, Prompt } from './types';
 import {
   cyrb53Hash,
   extractTitleFromPath,
   normalizeFilePath,
   normalizeURL,
-  resolvePage,
+  resolveNote,
 } from './utils';
-import { getGitHistory, getLatestCommit } from './git';
+import { getFileLogs, getLatestCommit } from './git';
 
-export type RenderPage = (
+export type RenderNote = (
   path: string,
   content: string,
-  pages: FullPages,
+  notes: Notes,
   pathToIdMap: Record<string, number>
 ) => Promise<void>;
 
-export function createPageRenderer(config: Config): RenderPage {
+export function createNoteRenderer(config: Config): RenderNote {
   const md = unified()
     .use(remarkParse)
     .use(wikiLinkPlugin, {
       hrefTemplate: (permalink: string) => `/${permalink}`,
     })
     .use(html, { sanitize: true });
-  return async (path, content, pages, pathToIdMap) => {
+  return async (path, content, notes, pathToIdMap) => {
     const parseTree = md.parse(content);
     const { links, prompts } = parseMarkdownTree(parseTree, pathToIdMap);
 
-    const page = resolvePage(path, config.root, pathToIdMap, pages);
-    page.content = md.stringify(parseTree);
-    page.prompts = prompts;
+    const note = resolveNote(path, config.root, pathToIdMap, notes);
+    note.content = md.stringify(parseTree);
+    note.prompts = prompts;
 
     for (const link of links) {
-      const linkedPage = pages[link];
-      if (!linkedPage?.backlinkIds.includes(link)) {
-        linkedPage.backlinkIds.push(link);
+      const linkedNote = notes[link];
+      if (!linkedNote?.backlinkIds.includes(link)) {
+        linkedNote.backlinkIds.push(link);
       }
     }
 
-    if (config.history && page.history === undefined) {
-      page.history = await getGitHistory(path, config.history);
+    if (config.logs && note.logs === undefined) {
+      note.logs = await getFileLogs(path, config.logs);
     }
 
     const lastestCommit = await getLatestCommit(path);
-    if (page.lastModified === '') {
+    if (note.lastModified === '') {
       if (lastestCommit !== null) {
-        page.lastModified = lastestCommit.modified;
+        note.lastModified = lastestCommit.modified;
       } else {
         const stats = fs.statSync(path);
-        page.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
+        note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
       }
     } else {
       const stats = fs.statSync(path);
-      page.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
+      note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
 
       // If the file has been modified since the last commit show the last commit in history
       if (
-        config.history &&
+        config.logs &&
         lastestCommit !== null &&
-        page.history?.[0]?.commit !== lastestCommit.commit
+        note.logs?.[0]?.commit !== lastestCommit.commit
       ) {
-        page.history?.unshift(lastestCommit);
+        note.logs?.unshift(lastestCommit);
       }
     }
   };
@@ -75,30 +75,30 @@ export function createPageRenderer(config: Config): RenderPage {
 // TODO
 function parseMarkdownTree(
   node: Node,
-  pathToIdMap: PagePathToIdMap
-): { links: PageId[]; prompts: Prompt[] } {
+  pathToIdMap: NotePathToIdMap
+): { links: NoteId[]; prompts: Prompt[] } {
   return {
     links: [],
     prompts: [],
   };
 }
 
-export async function parseMarkdownFiles({ root, directory }: Config, renderPage: RenderPage) {
-  const fullPages: FullPages = {};
+export async function parseNotes({ root, directory }: Config, renderNote: RenderNote) {
+  const notes: Notes = {};
   // uses normalized paths
-  const pathToIdMap: PagePathToIdMap = {};
-  const pagePaths = glob.sync(`${root}/${directory ? directory + '/' : ''}**/*.md`, {
+  const pathToIdMap: NotePathToIdMap = {};
+  const notesPaths = glob.sync(`${root}/${directory ? directory + '/' : ''}**/*.md`, {
     ignore: ['node_modules/**/*'],
   });
-  for (const path of pagePaths) {
+  for (const path of notesPaths) {
     const normalizedPath = normalizeFilePath(root, path);
     const id = cyrb53Hash(path);
     const url = normalizeURL(root, path);
     pathToIdMap[normalizedPath] = id;
     const stats = fs.statSync(path);
 
-    // Create an empty page
-    fullPages[id] = {
+    // Create an empty note
+    notes[id] = {
       id,
       path: normalizedPath,
       url,
@@ -112,11 +112,11 @@ export async function parseMarkdownFiles({ root, directory }: Config, renderPage
   }
 
   await Promise.all(
-    pagePaths.map(async (filePath) => {
+    notesPaths.map(async (filePath) => {
       const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
-      await renderPage(filePath, content, fullPages, pathToIdMap);
+      await renderNote(filePath, content, notes, pathToIdMap);
     })
   );
 
-  return { fullPages, pathToIdMap };
+  return { notes, pathToIdMap };
 }

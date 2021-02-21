@@ -1,5 +1,5 @@
 import startCase from 'lodash.startcase';
-import { FullPage, FullPages, PagePathToIdMap } from './types';
+import { Note, Notes, NotePathToIdMap } from './types';
 
 // A hash function
 export function cyrb53Hash(str: string, seed: number = 0): number {
@@ -33,19 +33,19 @@ export function extractTitleFromPath(path: string): string {
   return startCase(path.slice(path.lastIndexOf('/') + 1));
 }
 
-export function resolvePage(
+export function resolveNote(
   path: string,
   root: string,
-  pathToIdMap: PagePathToIdMap,
-  fullPages: FullPages
-): FullPage {
+  pathToIdMap: NotePathToIdMap,
+  notes: Notes
+): Note {
   const normalizedPath = normalizeFilePath(root, path);
-  const pageId = pathToIdMap[normalizedPath];
-  const page = fullPages[pageId];
+  const noteId = pathToIdMap[normalizedPath];
+  const note = notes[noteId];
 
-  if (page === undefined) {
+  if (note === undefined) {
     throw new Error(`Markdown file not found: '${path}'.`);
   }
 
-  return page;
+  return note;
 }
