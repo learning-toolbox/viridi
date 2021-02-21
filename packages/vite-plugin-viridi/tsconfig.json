@@ -11,10 +11,7 @@
     "target": "esnext",
     "declaration": true,
     "outDir": "./dist",
-    "sourceMap": true,
-    "paths": {
-      "types/*": ["types/*"]
-    }
+    "sourceMap": true
   },
   "include": ["src", "types"]
 }

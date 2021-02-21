@@ -5,7 +5,7 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { FullPages, PageId, PagePathToIdMap, Prompt } from 'types/node';
+import { Config, FullPages, PageId, PagePathToIdMap, Prompt } from './types';
 import { cyrb53Hash, extractTitleFromPath, normalizeFilePath, normalizeURL } from './utils';
 
 export type RenderPage = (
@@ -15,7 +15,7 @@ export type RenderPage = (
   pathToIdMap: Record<string, number>
 ) => void;
 
-export function createPageRenderer(root: string): RenderPage {
+export function createPageRenderer({ root }: Config): RenderPage {
   const md = unified()
     .use(remarkParse)
     .use(wikiLinkPlugin, {
@@ -52,7 +52,7 @@ function parseMarkdownTree(
   };
 }
 
-export async function parseMarkdownFiles(root: string, renderPage: RenderPage) {
+export async function parseMarkdownFiles({ root }: Config, renderPage: RenderPage) {
   const fullPages: FullPages = {};
   // uses normalized paths
   const pathToIdMap: PagePathToIdMap = {};

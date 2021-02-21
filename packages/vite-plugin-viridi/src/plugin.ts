@@ -1,17 +1,26 @@
 import fs from 'fs';
 import { Plugin } from 'vite';
 import { createPageRenderer, parseMarkdownFiles, RenderPage } from './markdown';
-import { FullPages, PagePathToIdMap } from 'types/node';
+import { FullPages, PagePathToIdMap, UserConfig, Config } from './types';
 import { normalizeFilePath } from './utils';
 
 const viridiFileID = '@viridi';
 
-export type UserConfig = {
-  root: string;
-};
+function resolveConfig(userConfig: UserConfig = {}, root: string): Config {
+  const defaultConfig: Config = {
+    root,
+    directory: '',
+    history: false,
+  };
 
-export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
-  let root: string;
+  return {
+    ...defaultConfig,
+    ...userConfig,
+  };
+}
+
+export function viridiPlugin(userConfig?: UserConfig): Plugin {
+  let config: Config;
   let fullPages: FullPages;
   let pathToIdMap: PagePathToIdMap;
   let renderPage: RenderPage;
@@ -20,8 +29,8 @@ export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
     name: 'vite-plugin-viridi',
 
     configResolved(resolvedConfig) {
-      root = resolvedConfig.root;
-      renderPage = createPageRenderer(root);
+      config = resolveConfig(userConfig, resolvedConfig.root);
+      renderPage = createPageRenderer(config);
     },
 
     resolveId(id) {
@@ -33,20 +42,22 @@ export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
     async load(id) {
       if (id === viridiFileID) {
         if (fullPages === undefined || pathToIdMap === undefined) {
-          ({ fullPages, pathToIdMap } = await parseMarkdownFiles(root, renderPage));
+          ({ fullPages, pathToIdMap } = await parseMarkdownFiles(config, renderPage));
         }
 
-        return createPagesModule(fullPages);
+        return createPagesModule(config, fullPages);
       }
     },
 
     async transform(content, id) {
       if (id.endsWith('.md')) {
         if (fullPages === undefined || pathToIdMap === undefined) {
-          ({ fullPages, pathToIdMap } = await parseMarkdownFiles(root, renderPage));
+          throw new Error(
+            `viridi: It *appears* that you are trying to directly import a markdown file. Viridi handles that for you.`
+          );
         }
 
-        const path = normalizeFilePath(root, id);
+        const path = normalizeFilePath(config.root, id);
         const pageId = pathToIdMap[path];
         const page = fullPages[pageId];
 
@@ -76,33 +87,37 @@ export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
 }
 
 // Use glob import to dynamically import all data for each markdown page.
-function createPagesModule(fullPages: FullPages): string {
+function createPagesModule(config: Config, fullPages: FullPages): string {
   return `
-const pages = import.meta.glob('/**/*.md');
+const pages = import.meta.glob('${config.directory}/**/*.md');
 
 const fullPages = {
-  ${Object.values(fullPages)
-    .map((page) => {
-      const { id, title, path, backlinkIds, url, lastUpdated, created } = page;
-      return `${id}: {
-  id: ${id},
-  title: '${title}',
-  path: '${path}',
-  lastUpdated: new Date(${lastUpdated}),
-  created: new Date(${created}),
-  url: '${url}',      
-  backlinkIds: ${JSON.stringify(backlinkIds)},
-  get backlinks() {
-    return this.backlinkIds.map(id => fullPages[id]);
-  },
-  async data() {
-    const { default: data } = await pages[this.path]();
-    return data;
-  },
-},`;
-    })
-    .join('\n')}
-}
+${Object.values(fullPages)
+  .map((page) => {
+    const { id, title, path, backlinkIds, url, lastUpdated, created } = page;
+    return `  ${id}: Object.freeze({
+    id: ${id},
+    title: '${title}',
+    path: '${path}',
+    url: '${url}',      
+    backlinkIds: ${JSON.stringify(backlinkIds)},
+    get backlinks() {
+      return this.backlinkIds.map(id => fullPages[id]);
+    },
+    get lastUpdated() {
+      return new Date(${lastUpdated});
+    },
+    get created() {
+      return new Date(${created});
+    },
+    async data() {
+      const { default: data } = await pages[this.path]();
+      return data;
+    },
+  }),`;
+  })
+  .join('\n')}
+};
 
-export default fullPages;`;
+export default Object.freeze(fullPages);`;
 }
