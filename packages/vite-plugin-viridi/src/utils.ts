@@ -15,6 +15,10 @@ export function cyrb53Hash(str: string, seed: number = 0): number {
 }
 
 export function normalizeFilePath(root: string, path: string): string {
+  return path.replace(root, '');
+}
+
+export function normalizeURL(root: string, path: string): string {
   path = path.replace(root, '').replace('.md', '');
 
   // does this make sense?

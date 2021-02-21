@@ -5,8 +5,8 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { FullPages, PageId, PagePathToIdMap, Prompt } from './types';
-import { cyrb53Hash, extractTitleFromPath, normalizeFilePath } from './utils';
+import { FullPages, PageId, PagePathToIdMap, Prompt } from 'types/node';
+import { cyrb53Hash, extractTitleFromPath, normalizeFilePath, normalizeURL } from './utils';
 
 export type RenderPage = (
   path: string,
@@ -27,14 +27,15 @@ export function createPageRenderer(root: string): RenderPage {
     const id = pathToIdMap[normalizedPath];
     const parseTree = md.parse(content);
     const { links, prompts } = parseMarkdownTree(parseTree, pathToIdMap);
+
     const page = pages[id];
     page.content = md.stringify(parseTree);
     page.prompts = prompts;
 
     for (const link of links) {
       const linkedPage = pages[link];
-      if (!linkedPage?.backlinks.includes(link)) {
-        linkedPage.backlinks.push(link);
+      if (!linkedPage?.backlinkIds.includes(link)) {
+        linkedPage.backlinkIds.push(link);
       }
     }
   };
@@ -56,19 +57,24 @@ export async function parseMarkdownFiles(root: string, renderPage: RenderPage) {
   // uses normalized paths
   const pathToIdMap: PagePathToIdMap = {};
   const pagePaths = glob.sync(`${root}/**/*.md`, { ignore: ['node_modules/**/*'] });
-  for (const filePath of pagePaths) {
-    const path = normalizeFilePath(root, filePath);
+  for (const path of pagePaths) {
+    const normalizedPath = normalizeFilePath(root, path);
     const id = cyrb53Hash(path);
+    const url = normalizeURL(root, path);
+    pathToIdMap[normalizedPath] = id;
+    const stats = fs.statSync(path);
 
-    pathToIdMap[path] = id;
-
+    // Create and empty page
     fullPages[id] = {
       id,
-      path,
-      title: extractTitleFromPath(path),
+      path: normalizedPath,
+      url,
+      lastUpdated: Math.round(stats.mtimeMs),
+      created: Math.round(stats.birthtimeMs),
+      title: extractTitleFromPath(url),
       content: '',
       prompts: [],
-      backlinks: [],
+      backlinkIds: [],
     };
   }
 

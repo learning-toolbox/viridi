@@ -1,5 +1,6 @@
-const { viridiPlugin } = require('@viridi/vite-plugin');
+import { defineConfig } from 'vite';
+import { viridiPlugin } from '@viridi/vite-plugin';
 
-module.exports = {
+export default defineConfig({
   plugins: [viridiPlugin()],
-};
+});

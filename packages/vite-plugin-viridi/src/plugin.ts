@@ -1,6 +1,7 @@
+import fs from 'fs';
 import { Plugin } from 'vite';
 import { createPageRenderer, parseMarkdownFiles, RenderPage } from './markdown';
-import { FullPages, PagePathToIdMap, Pages } from './types';
+import { FullPages, PagePathToIdMap } from 'types/node';
 import { normalizeFilePath } from './utils';
 
 const viridiFileID = '@viridi';
@@ -34,19 +35,13 @@ export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
         if (fullPages === undefined || pathToIdMap === undefined) {
           ({ fullPages, pathToIdMap } = await parseMarkdownFiles(root, renderPage));
         }
-        const pages = Object.values(fullPages).reduce((acc, page) => {
-          const { id, title, path, backlinks } = page;
-          acc[id] = { id, title, path, backlinks };
-          return acc;
-        }, {} as Pages);
-        return `export default ${JSON.stringify(pages)}`;
+
+        return createPagesModule(fullPages);
       }
     },
 
     async transform(content, id) {
       if (id.endsWith('.md')) {
-        console.log(id);
-
         if (fullPages === undefined || pathToIdMap === undefined) {
           ({ fullPages, pathToIdMap } = await parseMarkdownFiles(root, renderPage));
         }
@@ -57,17 +52,57 @@ export function viridiPlugin(config: Partial<UserConfig> = {}): Plugin {
 
         page.content = '';
         page.prompts = [];
-        for (const backlink of page.backlinks) {
-          const linkedPage = fullPages[backlink];
-          linkedPage.backlinks.splice(linkedPage.backlinks.indexOf(pageId), 1);
+        for (const backlinkId of page.backlinkIds) {
+          const linkedPage = fullPages[backlinkId];
+          linkedPage.backlinkIds.splice(linkedPage.backlinkIds.indexOf(pageId), 1);
         }
 
         renderPage(path, content, fullPages, pathToIdMap);
 
-        return `export default ${JSON.stringify(page)}`;
+        const stats = fs.statSync(id);
+        page.lastUpdated = Math.round(stats.mtimeMs);
+
+        return `export default ${JSON.stringify({
+          content: page.content,
+          prompts: page.prompts,
+        })}`;
       }
     },
 
-    // handleHotUpdate(ctx) {},
+    // handleHotUpdate(ctx) {
+    //   console.log(ctx.file);
+    // },
   };
+}
+
+// Use glob import to dynamically import all data for each markdown page.
+function createPagesModule(fullPages: FullPages): string {
+  return `
+const pages = import.meta.glob('/**/*.md');
+
+const fullPages = {
+  ${Object.values(fullPages)
+    .map((page) => {
+      const { id, title, path, backlinkIds, url, lastUpdated, created } = page;
+      return `${id}: {
+  id: ${id},
+  title: '${title}',
+  path: '${path}',
+  lastUpdated: new Date(${lastUpdated}),
+  created: new Date(${created}),
+  url: '${url}',      
+  backlinkIds: ${JSON.stringify(backlinkIds)},
+  get backlinks() {
+    return this.backlinkIds.map(id => fullPages[id]);
+  },
+  async data() {
+    const { default: data } = await pages[this.path]();
+    return data;
+  },
+},`;
+    })
+    .join('\n')}
+}
+
+export default fullPages;`;
 }

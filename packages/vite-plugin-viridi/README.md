@@ -24,4 +24,5 @@ Viridi aims to take care of features common across these workflows so that you c
 - Ability to view changes to notes (using Git?)
 - Better permalinks? ([Inspiration](https://twitter.com/jordwalke/status/1350385770234724353))
 - Search
+- Incremental build (i.e. better caching in node_modules)
 - Better syncing between external apps (i.e Notion, Bear, Roam, ect.)

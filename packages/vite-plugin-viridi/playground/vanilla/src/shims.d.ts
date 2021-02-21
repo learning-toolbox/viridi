@@ -1,11 +1,6 @@
-declare module '*.md' {
-  import { FullPage } from '@viridi/vite-plugin';
-  const page: FullPage;
-  export default page;
-}
-
 declare module '@viridi' {
-  import { Pages } from '@viridi/vite-plugin';
-  const pages: Pages;
+  import { FullPages } from '@viridi/vite-plugin/types/client';
+  const pages: FullPages;
   export default pages;
+  export * from '@viridi/vite-plugin/types/client';
 }

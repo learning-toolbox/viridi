@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "A JavaScript static site generator for creating evergreen notes.",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "typings": "index.d.ts",
   "repository": "https://github.com/learning-toolbox/viridi.git",
   "author": "chrisshank <chris.shank.23@gmail.com>",
   "license": "MIT",
