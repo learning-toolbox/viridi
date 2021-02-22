@@ -1,9 +1,9 @@
 import simpleGit from 'simple-git';
-import { LogOptions, NoteLog } from './types';
+import { NoteLog } from './types';
 
 const git = simpleGit();
 
-export async function getFileLogs(file: string, options: LogOptions = {}): Promise<NoteLog[]> {
+export async function getFileLogs(file: string): Promise<NoteLog[]> {
   // Use array options to avoid the '--follow' param
   const result = await git.log([file]);
 

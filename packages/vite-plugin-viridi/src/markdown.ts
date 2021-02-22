@@ -5,7 +5,7 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { Config, Notes, NoteId, NotePathToIdMap, Prompt } from './types';
+import { Config, Notes, NoteID, NotePathToIdMap, Prompt } from './types';
 import {
   cyrb53Hash,
   extractTitleFromPath,
@@ -36,6 +36,7 @@ export function createNoteRenderer(config: Config): RenderNote {
     const note = resolveNote(path, config.root, pathToIdMap, notes);
     note.content = md.stringify(parseTree);
     note.prompts = prompts;
+    note.linkedIds = links;
 
     for (const link of links) {
       const linkedNote = notes[link];
@@ -45,7 +46,7 @@ export function createNoteRenderer(config: Config): RenderNote {
     }
 
     if (config.logs && note.logs === undefined) {
-      note.logs = await getFileLogs(path, config.logs);
+      note.logs = await getFileLogs(path);
     }
 
     const lastestCommit = await getLatestCommit(path);
@@ -76,7 +77,7 @@ export function createNoteRenderer(config: Config): RenderNote {
 function parseMarkdownTree(
   node: Node,
   pathToIdMap: NotePathToIdMap
-): { links: NoteId[]; prompts: Prompt[] } {
+): { links: NoteID[]; prompts: Prompt[] } {
   return {
     links: [],
     prompts: [],
@@ -107,6 +108,7 @@ export async function parseNotes({ root, directory }: Config, renderNote: Render
       title: extractTitleFromPath(url),
       content: '',
       prompts: [],
+      linkedIds: [],
       backlinkIds: [],
     };
   }

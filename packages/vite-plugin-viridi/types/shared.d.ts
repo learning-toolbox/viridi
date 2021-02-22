@@ -11,21 +11,31 @@ export type ClozeDeletionPrompt = {
   content: string;
 };
 
-export type NoteId = number;
+export type NoteID = number;
 
 export type NoteBase = {
-  id: NoteId;
+  /** The unique ID of the note. This is actually the hash of the file path. */
+  id: NoteID;
+  /** The absolute file path of the note. */
   path: string;
+  /** The URL for the note */
   url: string;
+  /** The title of the note. It is extracted from the file name of the note.  */
   title: string;
-  backlinkIds: NoteId[];
+  /** A list of note IDs that this note links to. */
+  linkedIds: NoteID[];
+  /** A list of note IDs that link to this note. */
+  backlinkIds: NoteID[];
 };
 
 export type NoteData = {
+  /** The HTML content of the note compiled from markdown. */
   content: string;
+  /** A list of questions/answer and cloze deletion prompts extracted from the markdown. */
   prompts: Prompt[];
 };
 
 export type NoteLogData = {
+  /** The HTML content of the note compiled from markdown for the given log. */
   content: string;
 };

@@ -1,7 +1,7 @@
 {
   "name": "@viridi/vite-plugin",
   "version": "0.0.0",
-  "description": "A JavaScript static site generator for creating evergreen notes.",
+  "description": "A ViteJS plugin to easily create digital gardens, evergreen notes, ect.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "repository": "https://github.com/learning-toolbox/viridi.git",
@@ -9,7 +9,6 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsc -w",
-    "dev:demo": "vite demo",
     "build": "rimraf -rf dist && tsc"
   },
   "devDependencies": {

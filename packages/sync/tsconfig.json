@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "target": "esnext",
+    "declaration": true,
+    "outDir": "./dist",
+    "sourceMap": true
+  },
+  "include": ["src"]
+}

@@ -1,4 +1,5 @@
 import notes, { Note } from '@viridi';
+
 const dateOptions = {
   year: 'numeric',
   month: 'short',

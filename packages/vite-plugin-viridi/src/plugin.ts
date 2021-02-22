@@ -11,7 +11,7 @@ function resolveConfig({ directory, gitLogs }: UserConfig = {}, root: string): C
   return {
     root,
     directory,
-    logs: gitLogs === true ? {} : gitLogs === false ? undefined : gitLogs,
+    logs: gitLogs,
   };
 }
 
