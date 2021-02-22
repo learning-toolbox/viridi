@@ -1,10 +1,12 @@
 # ViteJS Viridi Plugin (WIP)
 
-> A ViteJS plugin to create your own [digital gardens](https://maggieappleton.com/garden-history), [evergreen notes](https://notes.andymatuschak.org/Evergreen_notes), [Zettelkasten](http://luhmann.surge.sh/communicating-with-slip-boxes), and/or [personal knowledge base](https://en.wikipedia.org/wiki/Personal_knowledge_base).
+> A ViteJS plugin to help create your own [digital gardens](https://maggieappleton.com/garden-history), [evergreen notes](https://notes.andymatuschak.org/Evergreen_notes), [Zettelkasten](http://luhmann.surge.sh/communicating-with-slip-boxes), and/or [personal knowledge base](https://en.wikipedia.org/wiki/Personal_knowledge_base).
 
 ## Introduction
 
-This package is a ViteJS plugin that parses the markdown files (denoted by the `.md` file extension) located in your project and creates a easily accessible graph of your interconnected notes. One goal is to abstract away file-system importing and parsing/analyzing markdown, so that you can focus on pushing forward what tools for thinking, learning, and creating can do! Our other goal is to be as unobtrusive as we can about determining what you use to build your website or web app. If you are curious why we chose to use ViteJS as our dev server and build tool please read [here](#).
+This package is a [ViteJS](https://vitejs.dev/) plugin that parses the markdown files (denoted by the `.md` file extension) located in your project and creates a easily accessible graph of your interconnected notes. One goal is to abstract away file-system importing and parsing/analyzing markdown, so that you can focus on pushing forward what tools for thinking, learning, and creating can do! Our other goal is to be as unobtrusive as we can about determining what you use to build your website or web app. If you are curious why we chose to use ViteJS as our dev server and build tool please read [here](#why-vite).
+
+Getting familiar with Vite will be important, but it should be pretty easy to get up and running! We highly recommend reading through the [ViteJS documentation](https://vitejs.dev/guide/).
 
 ## Installation
 
@@ -38,22 +40,11 @@ module.exports = {
 };
 ```
 
-> Tip: You can also create a `vite.config.ts` if you want better type support.
-
-```ts
-import { defineConfig } from 'vite';
-import { viridiPlugin } from '@viridi/vite-plugin';
-
-export default defineConfig({
-  plugins: [viridiPlugin()],
-});
-```
-
 ## Usage
 
-That's all that it takes to get Viridi setup! The first thing to do is to start adding some markdown files and start creating links between them. Read more about how markdown works in Viridi [here](#markdown).
+That's all that it takes to get Viridi setup! The first thing to do is to start adding some markdown files and (ideally) start creating links between them. Read more about how markdown works in Viridi [here](#markdown).
 
-Afterwards, in any JavaScript or TypeScript file you just import the `@viridi` module to access the graph of your knowledge base. Viridi handles importing and parsing your markdown files so that you can easily access and manipulate the underlying knowledge graph.
+Afterwards, you just import the `@viridi` module to access the graph of your knowledge base in any JavaScript or TypeScript file. Viridi handles importing and parsing your markdown files so that you can easily access and manipulate the underlying knowledge graph.
 
 ```ts
 import notes from '@viridi';
@@ -63,6 +54,8 @@ import notes from '@viridi';
  */
 console.log(notes);
 ```
+
+> Tip: The `@viridi` module is not a JS module in the file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. It is best practice to use the `@` prefix to note this. This shouldn't affect you either way.
 
 ### Markdown
 
@@ -89,9 +82,9 @@ const note: Note = notes.<id>;
 const {content, prompt} = await note.data();
 ```
 
-#### Note Log/History (Git)
+#### Note Log/History using Git (WIP)
 
-If your project **uses** Git, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it.
+If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it.
 
 #### Link Monitoring (WIP)
 
@@ -132,6 +125,32 @@ const noteData: NoteData = {
 
 There are a couple of options that you might want to configure to enable certain features. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/src/index.ts#L2) type for more details.
 
+## TypeScript integration
+
+Vite supports Typescript support for the config file. Just call it `vite.config.ts`!
+
+```ts
+import { defineConfig } from 'vite';
+import { viridiPlugin } from '@viridi/vite-plugin';
+
+export default defineConfig({
+  plugins: [viridiPlugin()],
+});
+```
+
+For client typings please add this shim:
+
+```ts
+declare module '@viridi' {
+  import { Notes } from '@viridi/vite-plugin/types/client';
+
+  const notes: Notes;
+  export default notes;
+
+  export * from '@viridi/vite-plugin/types/client';
+}
+```
+
 ### Areas of research
 
 - Better permalinks?
@@ -141,3 +160,8 @@ There are a couple of options that you might want to configure to enable certain
 - Search
 - Also looking for feedback on what we could do to make it easier to search.
 - Incremental builds (i.e. better caching in node_modules)
+- Better HMR integration
+
+## Why Vite
+
+One of the challenges of writing a library like this is the a build tool needs to be used, which means that we have to choose one.

@@ -1,2 +1,2 @@
 export { viridiPlugin } from './plugin';
-export { UserConfig } from './types';
+export { UserConfig } from './config';

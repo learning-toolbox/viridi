@@ -1,4 +1,4 @@
-import { NoteLogData, NoteBase, NoteData } from './shared';
+import { NoteBase, NoteData } from './shared';
 
 export type Note = Readonly<
   NoteBase & {
@@ -10,7 +10,7 @@ export type Note = Readonly<
     links: Note[];
     /** A list of references that link to the current note. */
     backlinks: Note[];
-    /** A dynamic import that fetchs actual data of the Note */
+    /** A dynamic import that fetches actual data of the Note */
     data: () => Promise<Readonly<NoteData>>;
     /** A list of git logs that contain previous versions of the note. */
     logs?: Readonly<NoteLog>[];
@@ -27,7 +27,7 @@ export type NoteLog = {
   /** The Git username of the log. */
   author: string;
   /** A dynamic import that fetches content of the note at the time of the log. */
-  data: () => Promise<Readonly<NoteLogData>>;
+  data: () => Promise<Readonly<NoteData>>;
 };
 
 export * from './shared';

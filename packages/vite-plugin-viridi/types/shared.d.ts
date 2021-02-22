@@ -22,6 +22,8 @@ export type NoteBase = {
   url: string;
   /** The title of the note. It is extracted from the file name of the note.  */
   title: string;
+  /** The frontmatter extracted from parsing the markdown file. */
+  frontmatter: Record<string, any>;
   /** A list of note IDs that this note links to. */
   linkedIds: NoteID[];
   /** A list of note IDs that link to this note. */
@@ -31,11 +33,6 @@ export type NoteBase = {
 export type NoteData = {
   /** The HTML content of the note compiled from markdown. */
   content: string;
-  /** A list of questions/answer and cloze deletion prompts extracted from the markdown. */
-  prompts: Prompt[];
-};
-
-export type NoteLogData = {
-  /** The HTML content of the note compiled from markdown for the given log. */
-  content: string;
+  /** A list of questions/answer and cloze-deletion prompts extracted from the markdown. */
+  prompts?: Prompt[];
 };

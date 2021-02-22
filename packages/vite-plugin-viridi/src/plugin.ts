@@ -1,19 +1,12 @@
 import fs from 'fs';
 import { Plugin } from 'vite';
+import { resolveConfig, UserConfig, Config } from './config';
 import { getFileLogData } from './git';
 import { createNoteRenderer, parseNotes, RenderNote } from './markdown';
-import { Notes, NotePathToIdMap, UserConfig, Config, Note } from './types';
+import { Notes, NotePathToIdMap, Note } from './types';
 import { resolveNote } from './utils';
 
 const viridiFileID = '@viridi';
-
-function resolveConfig({ directory, gitLogs }: UserConfig = {}, root: string): Config {
-  return {
-    root,
-    directory,
-    logs: gitLogs,
-  };
-}
 
 const virtualMarkdownRE = /^(.+\.md)\?(\w+)$/;
 
@@ -47,7 +40,7 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
       }
 
       // TODO: refactor this logic
-      if (config.logs !== undefined) {
+      if (config.gitLogs !== undefined) {
         const [_, path, commit] = virtualMarkdownRE.exec(id) || [];
         if (path !== undefined && commit !== undefined) {
           const note = resolveNote(path, config.root, pathToIdMap, notes);
@@ -102,7 +95,7 @@ export function viridiPlugin(userConfig?: UserConfig): Plugin {
 }
 
 // Use glob import to dynamically import all data for each note.
-function createNotesModule({ directory, logs }: Config, notes: Notes): string {
+function createNotesModule({ directory, gitLogs }: Config, notes: Notes): string {
   return `
 const notesData = import.meta.glob('${directory ? '/' + directory : ''}/**/*.md');
 
@@ -129,7 +122,7 @@ ${Object.values(notes)
       const { default: data } = await notesData[this.path]();
       return data;
     },
-    logs: ${createLogs(note)},
+    logs: ${gitLogs ? createLogs(note) : undefined},
   }),`;
   })
   .join('\n')}

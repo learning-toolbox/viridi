@@ -5,7 +5,7 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { Config, Notes, NoteID, NotePathToIdMap, Prompt } from './types';
+import { Notes, NoteID, NotePathToIdMap, Prompt } from './types';
 import {
   cyrb53Hash,
   extractTitleFromPath,
@@ -14,6 +14,7 @@ import {
   resolveNote,
 } from './utils';
 import { getFileLogs, getLatestCommit } from './git';
+import { Config } from './config';
 
 export type RenderNote = (
   path: string,
@@ -45,14 +46,14 @@ export function createNoteRenderer(config: Config): RenderNote {
       }
     }
 
-    if (config.logs && note.logs === undefined) {
+    if (config.gitLogs && note.logs === undefined) {
       note.logs = await getFileLogs(path);
     }
 
-    const lastestCommit = await getLatestCommit(path);
+    const latestCommit = await getLatestCommit(path);
     if (note.lastModified === '') {
-      if (lastestCommit !== null) {
-        note.lastModified = lastestCommit.modified;
+      if (latestCommit !== null) {
+        note.lastModified = latestCommit.modified;
       } else {
         const stats = fs.statSync(path);
         note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
@@ -63,11 +64,11 @@ export function createNoteRenderer(config: Config): RenderNote {
 
       // If the file has been modified since the last commit show the last commit in history
       if (
-        config.logs &&
-        lastestCommit !== null &&
-        note.logs?.[0]?.commit !== lastestCommit.commit
+        config.gitLogs &&
+        latestCommit !== null &&
+        note.logs?.[0]?.commit !== latestCommit.commit
       ) {
-        note.logs?.unshift(lastestCommit);
+        note.logs?.unshift(latestCommit);
       }
     }
   };
@@ -84,7 +85,7 @@ function parseMarkdownTree(
   };
 }
 
-export async function parseNotes({ root, directory }: Config, renderNote: RenderNote) {
+export async function parseNotes({ root, directory, prompts }: Config, renderNote: RenderNote) {
   const notes: Notes = {};
   // uses normalized paths
   const pathToIdMap: NotePathToIdMap = {};
@@ -107,7 +108,8 @@ export async function parseNotes({ root, directory }: Config, renderNote: Render
       created: new Date(Math.round(stats.birthtimeMs)).toString(),
       title: extractTitleFromPath(url),
       content: '',
-      prompts: [],
+      frontmatter: {},
+      prompts: prompts ? [] : undefined,
       linkedIds: [],
       backlinkIds: [],
     };
