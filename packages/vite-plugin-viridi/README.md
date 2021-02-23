@@ -1,10 +1,10 @@
-# ViteJS Viridi Plugin (WIP)
+# Viridi (WIP)
 
 > A ViteJS plugin to help create your own [digital gardens](https://maggieappleton.com/garden-history), [evergreen notes](https://notes.andymatuschak.org/Evergreen_notes), [Zettelkasten](http://luhmann.surge.sh/communicating-with-slip-boxes), and/or [personal knowledge base](https://en.wikipedia.org/wiki/Personal_knowledge_base).
 
 ## Introduction
 
-This package is a [ViteJS](https://vitejs.dev/) plugin that parses the markdown files (denoted by the `.md` file extension) located in your project and creates a easily accessible graph of your interconnected notes. One goal is to abstract away file-system importing and parsing/analyzing markdown, so that you can focus on pushing forward what tools for thinking, learning, and creating can do! Our other goal is to be as unobtrusive as we can about determining what you use to build your website or web app. If you are curious why we chose to use ViteJS as our dev server and build tool please read [here](#why-vite).
+Viridi is a unopinionated, unobtrusive [ViteJS](https://vitejs.dev/) plugin that parses the markdown files (denoted by the `.md` file extension) located in your project and creates a graph of your interconnected notes. One goal is to abstract away the file-system and parsing/analyzing markdown, so that you can focus on pushing forward what tools for thinking, learning, and creating can do! Our other goal is to be unobtrusive to determining how you build your website or web app. If you are curious why we chose to use ViteJS as our dev server & build tool please read [here](#why-vite).
 
 Getting familiar with Vite will be important, but it should be pretty easy to get up and running! We highly recommend reading through the [ViteJS documentation](https://vitejs.dev/guide/).
 
@@ -17,7 +17,7 @@ $ yarn create @vitejs/app
 
 $ cd <project-name>
 
-$ yarn add @viridi/vite-plugin -D
+$ yarn add viridi -D
 ```
 
 With NPM
@@ -27,16 +27,16 @@ $ npm init @vitejs/app
 
 $ cd <project-name>
 
-$ npm install @viridi/vite-plugin -D
+$ npm install @viridi -D
 ```
 
 Add a `vite.config.js` file and add Viridi as a plugin
 
 ```js
-const { viridiPlugin } = require('@viridi/vite-plugin');
+const { viridiVitePlugin } = require('viridi');
 
 module.exports = {
-  plugins: [viridiPlugin()],
+  plugins: [viridiVitePlugin()],
 };
 ```
 
@@ -55,7 +55,7 @@ import notes from '@viridi';
 console.log(notes);
 ```
 
-> Tip: The `@viridi` module is not a JS module in the file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. It is best practice to use the `@` prefix to note this. This shouldn't affect you either way.
+> Fun fact: `@viridi` is not a actual JS in your file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. It seems to be best practice to use the `@` prefix to note this.
 
 ### Markdown
 
@@ -71,7 +71,7 @@ Viridi extracts the title of a note from the name of the markdown file as oppose
 
 ### Notes
 
-Each note contains meta-data such as the ID, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it. Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/types/client.d.ts) for more details.
+Each note contains meta-data such as the id, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks ). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/types/client.d.ts) for more details.
 
 #### Code Splitting
 
@@ -127,14 +127,14 @@ There are a couple of options that you might want to configure to enable certain
 
 ## TypeScript integration
 
-Vite supports Typescript support for the config file. Just call it `vite.config.ts`!
+Vite supports using Typescript for the config file. Just call it `vite.config.ts`!
 
 ```ts
 import { defineConfig } from 'vite';
-import { viridiPlugin } from '@viridi/vite-plugin';
+import { viridiVitePlugin } from 'viridi';
 
 export default defineConfig({
-  plugins: [viridiPlugin()],
+  plugins: [viridiVitePlugin()],
 });
 ```
 
@@ -142,21 +142,25 @@ For client typings please add this shim:
 
 ```ts
 declare module '@viridi' {
-  import { Notes } from '@viridi/vite-plugin/types/client';
+  import { Notes } from 'viridi/types/client';
 
   const notes: Notes;
   export default notes;
 
-  export * from '@viridi/vite-plugin/types/client';
+  export * from 'viridi/types/client';
 }
 ```
 
-### Areas of research
+## Examples
+
+Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/vite-plugin-viridi/playground) is mostly used for testing, but contains a few examples of how to use Viridi!
+
+## Areas of research
 
 - Better permalinks?
   - [Inspiration](https://twitter.com/jordwalke/status/1350385770234724353)
 - Transclusion
-  - At least for backlinks this could be useful. Need some more feedback on this...
+  - Still fuzzy what this could look like...
 - Search
 - Also looking for feedback on what we could do to make it easier to search.
 - Incremental builds (i.e. better caching in node_modules)
@@ -164,4 +168,4 @@ declare module '@viridi' {
 
 ## Why Vite
 
-One of the challenges of writing a library like this is the a build tool needs to be used, which means that we have to choose one.
+For now it's sensible to couple Viridi with a build tool. We evaluated a handful of options and decided that the ViteJS aligned closest with our goals of staying unobtrusive to your pick of web technology and providing you with fantastic DX with little to no configuration to support your workflow. Vite can handle building SPA, SSR, or SSG applications (although the latter two are still experimental at the time of this writing).
