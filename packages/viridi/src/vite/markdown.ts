@@ -5,16 +5,16 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { Notes, NoteID, NotePathToIdMap, Prompt } from './types';
+import { Notes, NoteID, NotePathToIdMap, Prompt } from '../core';
 import {
   cyrb53Hash,
   extractTitleFromPath,
   normalizeFilePath,
   normalizeURL,
   resolveNote,
-} from './utils';
-import { getFileLogs, getLatestCommit } from './git';
-import { Config } from './config';
+} from '../core/utils';
+import { getFileLogs, getLatestCommit } from '../core/git';
+import { Config } from '../core/config';
 
 export type RenderNote = (
   path: string,
@@ -37,7 +37,7 @@ export function createNoteRenderer(config: Config): RenderNote {
     const note = resolveNote(path, config.root, pathToIdMap, notes);
     note.content = md.stringify(parseTree);
     note.prompts = prompts;
-    note.linkedIds = links;
+    note.linkIds = links;
 
     for (const link of links) {
       const linkedNote = notes[link];
@@ -110,7 +110,7 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
       content: '',
       frontmatter: {},
       prompts: prompts ? [] : undefined,
-      linkedIds: [],
+      linkIds: [],
       backlinkIds: [],
     };
   }

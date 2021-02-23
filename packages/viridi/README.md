@@ -142,12 +142,12 @@ For client typings please add this shim:
 
 ```ts
 declare module '@viridi' {
-  import { Notes } from 'viridi/types/client';
+  import { Notes } from 'viridi/client';
 
   const notes: Notes;
   export default notes;
 
-  export * from 'viridi/types/client';
+  export * from 'viridi/client';
 }
 ```
 
@@ -157,6 +157,10 @@ Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/v
 
 ## Areas of research
 
+- Prefetching links using intersection observer.
+- Enabling more powerful bi-directional links.
+  - How do you modify an anchor in the rendered markdown?
+    - Render `a` by default with note ID, but allow the user to opt in to rendering note links as `span` with the note ID that they can Portal into?
 - Better permalinks?
   - [Inspiration](https://twitter.com/jordwalke/status/1350385770234724353)
 - Transclusion

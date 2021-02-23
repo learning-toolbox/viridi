@@ -1,5 +1,5 @@
 import startCase from 'lodash.startcase';
-import { Note, Notes, NotePathToIdMap } from './types';
+import { Note, Notes, NotePathToIdMap } from './types/node';
 
 // A hash function
 export function cyrb53Hash(str: string, seed: number = 0): number {

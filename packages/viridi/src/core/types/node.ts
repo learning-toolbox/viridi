@@ -1,4 +1,4 @@
-import { NoteBase, NoteData } from '../../types/shared';
+import { NoteBase, NoteData } from './shared';
 
 export type NoteLog = {
   commit: string;
@@ -9,6 +9,7 @@ export type NoteLog = {
 
 export type Note = NoteBase &
   NoteData & {
+    path: string;
     lastModified: string;
     created: string;
     logs?: NoteLog[];
@@ -18,4 +19,4 @@ export type Notes = Record<string, Note>;
 
 export type NotePathToIdMap = Record<Note['path'], Note['id']>;
 
-export * from '../../types/shared';
+export * from './shared';

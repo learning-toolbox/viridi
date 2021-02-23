@@ -1,5 +1,5 @@
 import simpleGit from 'simple-git';
-import { NoteLog } from './types';
+import { NoteLog } from './types/node';
 
 const git = simpleGit();
 

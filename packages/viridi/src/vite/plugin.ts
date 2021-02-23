@@ -1,10 +1,15 @@
-import fs from 'fs';
 import { Plugin } from 'vite';
-import { resolveConfig, UserConfig, Config } from './config';
-import { getFileLogData } from './git';
+import {
+  createVirtualNotesModule,
+  getFileLogData,
+  resolveConfig,
+  resolveNote,
+  Config,
+  Notes,
+  NotePathToIdMap,
+  UserConfig,
+} from '../core';
 import { createNoteRenderer, parseNotes, RenderNote } from './markdown';
-import { Notes, NotePathToIdMap, Note } from './types';
-import { resolveNote } from './utils';
 
 const viridiFileID = '@viridi';
 
@@ -36,7 +41,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
           ({ notes, pathToIdMap } = await parseNotes(config, renderNote));
         }
 
-        return createNotesModule(config, notes);
+        return createVirtualNotesModule(config, notes);
       }
 
       // TODO: refactor this logic
@@ -88,66 +93,5 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
         })});`;
       }
     },
-
-    // TODO: look into better HMR
-    // handleHotUpdate(ctx) {},
   };
-}
-
-// Use glob import to dynamically import all data for each note.
-function createNotesModule({ directory, gitLogs }: Config, notes: Notes): string {
-  return `
-const notesData = import.meta.glob('${directory ? '/' + directory : ''}/**/*.md');
-
-const notes = {
-${Object.values(notes)
-  .map((note) => {
-    const { id, title, path, backlinkIds, url, lastModified, created } = note;
-    return `  ${id}: Object.freeze({
-    id: ${id},
-    title: '${title}',
-    path: '${path}',
-    url: '${url}',      
-    backlinkIds: ${JSON.stringify(backlinkIds)},
-    get backlinks() {
-      return this.backlinkIds.map(id => notes[id]);
-    },
-    get lastModified() {
-      return new Date('${lastModified}');
-    },
-    get created() {
-      return new Date('${created}');
-    },
-    async data() {
-      const { default: data } = await notesData[this.path]();
-      return data;
-    },
-    logs: ${gitLogs ? createLogs(note) : undefined},
-  }),`;
-  })
-  .join('\n')}
-};
-
-export default Object.freeze(notes);`;
-}
-
-function createLogs(note: Note): string {
-  if (!note.logs) {
-    return 'undefined';
-  }
-  return `[${note.logs
-    .map(
-      ({ commit, modified, author }) => `Object.freeze({
-      commit: '${commit}',
-      authur: '${author}',
-      get modified() {
-        return new Date('${modified}');
-      },
-      async data() {
-        const {default: data} = await import('${note.path}?${commit}');
-        return data
-      },
-    }),`
-    )
-    .join('\n')}]`;
 }

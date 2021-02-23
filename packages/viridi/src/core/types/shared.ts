@@ -16,8 +16,6 @@ export type NoteID = number;
 export type NoteBase = {
   /** The unique ID of the note. This is actually the hash of the file path. */
   id: NoteID;
-  /** The absolute file path of the note. */
-  path: string;
   /** The URL for the note */
   url: string;
   /** The title of the note. It is extracted from the file name of the note.  */
@@ -25,7 +23,7 @@ export type NoteBase = {
   /** The frontmatter extracted from parsing the markdown file. */
   frontmatter: Record<string, any>;
   /** A list of note IDs that this note links to. */
-  linkedIds: NoteID[];
+  linkIds: NoteID[];
   /** A list of note IDs that link to this note. */
   backlinkIds: NoteID[];
 };
