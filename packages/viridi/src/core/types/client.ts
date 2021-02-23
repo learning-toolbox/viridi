@@ -1,3 +1,5 @@
+// Types that should only be used by the client
+
 import { NoteBase, NoteData, NoteID } from './shared';
 
 export type Note = Readonly<
@@ -19,6 +21,8 @@ export type Note = Readonly<
 
 export type Notes = Readonly<Record<NoteID, Note>>;
 
+export type NoteLogData = NoteData & Pick<Note, 'linkIds' | 'links'>;
+
 export type NoteLog = {
   /** The Git commit hash of the log */
   commit: string;
@@ -27,7 +31,7 @@ export type NoteLog = {
   /** The Git username of the log. */
   author: string;
   /** A dynamic import that fetches content of the note at the time of the log. */
-  data: () => Promise<Readonly<NoteData>>;
+  data: () => Promise<Readonly<NoteLogData>>;
 };
 
 export * from './shared';

@@ -1,48 +1,38 @@
 import fs from 'fs';
 import glob from 'fast-glob';
-import { Node } from 'unist';
-import unified from 'unified';
-import remarkParse from 'remark-parse';
-import html from 'remark-html';
-import { wikiLinkPlugin } from 'remark-wiki-link';
-import { Notes, NoteID, NotePathToIdMap, Prompt } from '../core';
+import { Config } from './config';
+import { getFileLogs, getLatestCommit } from './git';
+import { RenderMarkdown } from './markdown';
+import { Notes, NotePathToIdMap, NoteTitleToIdMap } from './types/node';
 import {
   cyrb53Hash,
   extractTitleFromPath,
   normalizeFilePath,
   normalizeURL,
   resolveNote,
-} from '../core/utils';
-import { getFileLogs, getLatestCommit } from '../core/git';
-import { Config } from '../core/config';
+} from './utils';
 
-export type RenderNote = (
-  path: string,
-  content: string,
-  notes: Notes,
-  pathToIdMap: Record<string, number>
-) => Promise<void>;
+export type RenderNote = ReturnType<typeof createNoteRenderer>;
 
-export function createNoteRenderer(config: Config): RenderNote {
-  const md = unified()
-    .use(remarkParse)
-    .use(wikiLinkPlugin, {
-      hrefTemplate: (permalink: string) => `/${permalink}`,
-    })
-    .use(html, { sanitize: true });
-  return async (path, content, notes, pathToIdMap) => {
-    const parseTree = md.parse(content);
-    const { links, prompts } = parseMarkdownTree(parseTree, pathToIdMap);
-
+export function createNoteRenderer(config: Config, renderMarkdown: RenderMarkdown) {
+  return async (
+    path: string,
+    markdown: string,
+    notes: Notes,
+    pathToIdMap: NotePathToIdMap,
+    titleToIdMap: NoteTitleToIdMap
+  ) => {
     const note = resolveNote(path, config.root, pathToIdMap, notes);
-    note.content = md.stringify(parseTree);
-    note.prompts = prompts;
-    note.linkIds = links;
 
-    for (const link of links) {
-      const linkedNote = notes[link];
-      if (!linkedNote?.backlinkIds.includes(link)) {
-        linkedNote.backlinkIds.push(link);
+    const { linkIds, prompts, content } = renderMarkdown(markdown, titleToIdMap);
+    note.content = content;
+    note.prompts = prompts;
+    note.linkIds = linkIds;
+
+    for (const id of linkIds) {
+      const linkedNote = notes[id];
+      if (!linkedNote?.backlinkIds.includes(id)) {
+        linkedNote.backlinkIds.push(id);
       }
     }
 
@@ -74,29 +64,24 @@ export function createNoteRenderer(config: Config): RenderNote {
   };
 }
 
-// TODO
-function parseMarkdownTree(
-  node: Node,
-  pathToIdMap: NotePathToIdMap
-): { links: NoteID[]; prompts: Prompt[] } {
-  return {
-    links: [],
-    prompts: [],
-  };
-}
-
 export async function parseNotes({ root, directory, prompts }: Config, renderNote: RenderNote) {
   const notes: Notes = {};
   // uses normalized paths
   const pathToIdMap: NotePathToIdMap = {};
+  const titleToIdMap: NoteTitleToIdMap = {};
   const notesPaths = glob.sync(`${root}/${directory ? directory + '/' : ''}**/*.md`, {
     ignore: ['node_modules/**/*'],
   });
   for (const path of notesPaths) {
     const normalizedPath = normalizeFilePath(root, path);
     const id = cyrb53Hash(path);
+
     const url = normalizeURL(root, path);
     pathToIdMap[normalizedPath] = id;
+
+    const title = extractTitleFromPath(url);
+    titleToIdMap[title] = id;
+
     const stats = fs.statSync(path);
 
     // Create an empty note
@@ -106,7 +91,7 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
       url,
       lastModified: '',
       created: new Date(Math.round(stats.birthtimeMs)).toString(),
-      title: extractTitleFromPath(url),
+      title,
       content: '',
       frontmatter: {},
       prompts: prompts ? [] : undefined,
@@ -118,9 +103,9 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
   await Promise.all(
     notesPaths.map(async (filePath) => {
       const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
-      await renderNote(filePath, content, notes, pathToIdMap);
+      await renderNote(filePath, content, notes, pathToIdMap, titleToIdMap);
     })
   );
 
-  return { notes, pathToIdMap };
+  return { notes, pathToIdMap, titleToIdMap };
 }

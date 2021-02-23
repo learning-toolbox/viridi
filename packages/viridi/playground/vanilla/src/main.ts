@@ -15,7 +15,7 @@ async function renderNote(note: Note) {
       <nav>
         <ul>
           ${Object.values(notes)
-            .map((note) => `<li><a href="${note.path}">${note.title} (${note.id})</a></li>`)
+            .map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
             .join('\n')}
         </ul>    
       </nav>

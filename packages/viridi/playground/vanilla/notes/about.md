@@ -4,4 +4,4 @@ Lorem ipsum...
 
 [[Home]]
 
-Does this update?
+Does this update? Testing to see if git logs works properly.

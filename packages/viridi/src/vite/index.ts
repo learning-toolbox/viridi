@@ -1,15 +1,20 @@
 import { Plugin } from 'vite';
 import {
+  createMarkdownRenderer,
+  createNoteRenderer,
   createVirtualNotesModule,
   getFileLogData,
+  parseNotes,
   resolveConfig,
   resolveNote,
   Config,
   Notes,
   NotePathToIdMap,
+  RenderNote,
   UserConfig,
+  NoteTitleToIdMap,
+  RenderMarkdown,
 } from '../core';
-import { createNoteRenderer, parseNotes, RenderNote } from './markdown';
 
 const viridiFileID = '@viridi';
 
@@ -19,6 +24,8 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
   let config: Config;
   let notes: Notes;
   let pathToIdMap: NotePathToIdMap;
+  let titleToIdMap: NoteTitleToIdMap;
+  let renderMarkdown: RenderMarkdown;
   let renderNote: RenderNote;
 
   return {
@@ -26,7 +33,8 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
 
     configResolved(resolvedConfig) {
       config = resolveConfig(userConfig, resolvedConfig.root);
-      renderNote = createNoteRenderer(config);
+      renderMarkdown = createMarkdownRenderer();
+      renderNote = createNoteRenderer(config, renderMarkdown);
     },
 
     resolveId(id) {
@@ -38,7 +46,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
     async load(id) {
       if (id === viridiFileID) {
         if (notes === undefined || pathToIdMap === undefined) {
-          ({ notes, pathToIdMap } = await parseNotes(config, renderNote));
+          ({ notes, pathToIdMap, titleToIdMap } = await parseNotes(config, renderNote));
         }
 
         return createVirtualNotesModule(config, notes);
@@ -54,8 +62,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
             if (log !== undefined) {
               if (log.data === undefined) {
                 const markdown = await getFileLogData(note.path, commit);
-                // TODO: render markdown
-                log.data = { content: markdown };
+                log.data = renderMarkdown(markdown, titleToIdMap);
               }
               return `export default Object.freeze(${JSON.stringify(log.data)});`;
             } else {
@@ -85,7 +92,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
           linkedNote.backlinkIds.splice(linkedNote.backlinkIds.indexOf(note.id), 1);
         }
 
-        await renderNote(id, content, notes, pathToIdMap);
+        await renderNote(id, content, notes, pathToIdMap, titleToIdMap);
 
         return `export default Object.freeze(${JSON.stringify({
           content: note.content,

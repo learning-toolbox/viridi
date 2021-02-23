@@ -1,2 +1,2 @@
-export { UserConfig } from './core/config';
-export { viridiVitePlugin } from './vite/plugin';
+export { UserConfig } from './core';
+export { viridiVitePlugin } from './vite';

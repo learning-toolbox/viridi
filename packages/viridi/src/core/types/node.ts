@@ -19,4 +19,6 @@ export type Notes = Record<string, Note>;
 
 export type NotePathToIdMap = Record<Note['path'], Note['id']>;
 
+export type NoteTitleToIdMap = Record<Note['title'], Note['id']>;
+
 export * from './shared';
