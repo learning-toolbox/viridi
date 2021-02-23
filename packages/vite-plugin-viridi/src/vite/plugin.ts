@@ -10,7 +10,7 @@ const viridiFileID = '@viridi';
 
 const virtualMarkdownRE = /^(.+\.md)\?(\w+)$/;
 
-export function viridiPlugin(userConfig?: UserConfig): Plugin {
+export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
   let config: Config;
   let notes: Notes;
   let pathToIdMap: NotePathToIdMap;

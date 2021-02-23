@@ -1,4 +1,4 @@
-import { NoteBase, NoteData } from './shared';
+import { NoteBase, NoteData, NoteID } from './shared';
 
 export type Note = Readonly<
   NoteBase & {
@@ -17,7 +17,7 @@ export type Note = Readonly<
   }
 >;
 
-export type Notes = Readonly<Record<string, Note>>;
+export type Notes = Readonly<Record<NoteID, Note>>;
 
 export type NoteLog = {
   /** The Git commit hash of the log */

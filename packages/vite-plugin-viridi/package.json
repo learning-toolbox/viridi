@@ -1,5 +1,5 @@
 {
-  "name": "@viridi/vite-plugin",
+  "name": "viridi",
   "version": "0.0.0",
   "description": "A ViteJS plugin to easily create digital gardens, evergreen notes, ect.",
   "main": "dist/index.js",

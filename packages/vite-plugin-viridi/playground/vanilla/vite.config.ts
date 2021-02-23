@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
-import { viridiPlugin } from '@viridi/vite-plugin';
+import { viridiVitePlugin } from 'viridi';
 
 export default defineConfig({
-  plugins: [viridiPlugin({ directory: 'notes', gitLogs: true })],
+  plugins: [viridiVitePlugin({ directory: 'notes', gitLogs: true })],
 });
