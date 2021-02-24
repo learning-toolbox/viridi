@@ -47,12 +47,16 @@ That's all that it takes to get Viridi setup! The first thing to do is to start 
 Afterwards, you just import the `@viridi` module to access the graph of your knowledge base in any JavaScript or TypeScript file. Viridi handles importing and parsing your markdown files so that you can easily access and manipulate the underlying knowledge graph.
 
 ```ts
-import notes from '@viridi';
+import {
+  /** List of notes sorted by page rank. Each note contains references to the notes that it links and the notes that link it. */
+  notes,
+  /** Utility function to get note by its ID */
+  getNoteByID,
+  /** Utility function to get note by its URL */
+  getNoteByURL,
+} from '@viridi';
 
-/*
- * This will essentially log the knowledge graph of your notes.
- */
-console.log(notes);
+// Use the knowledge graph however you desire!
 ```
 
 > Fun fact: `@viridi` is not a actual JS in your file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. It seems to be best practice to use the `@` prefix to note this.
@@ -63,7 +67,7 @@ We are using `remark` to parse and analyze the markdown files. Here are some thi
 
 #### Frontmatter (WIP)
 
-Viridi lets you define meta
+Viridi lets you define frontmatter for each note that is extracted into the `frontmatter` property on each note.
 
 #### Titles
 
@@ -82,9 +86,13 @@ const note: Note = notes.<id>;
 const {content, prompt} = await note.data();
 ```
 
+#### Page Ranking (WIP)
+
+[PageRank](https://en.wikipedia.org/wiki/PageRank) is an algorithm to determine the important of each node in a graph. Each note has a `ranking` property to help you determine the relative importance of each note. By default, the `notes`, `links` and `backlinks` properties are sorted by page rank.
+
 #### Note Log/History using Git (WIP)
 
-If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it.
+If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require Viridi to recreate the knowledge graph for each commit. 😅
 
 #### Link Monitoring (WIP)
 
@@ -138,16 +146,14 @@ export default defineConfig({
 });
 ```
 
-For client typings please add this shim:
+For client typings please add the following to you `tsconfig.json`:
 
-```ts
-declare module '@viridi' {
-  import { Notes } from 'viridi/client';
-
-  const notes: Notes;
-  export default notes;
-
-  export * from 'viridi/client';
+```json
+{
+  "compilerOptions": {
+    "types": ["vite/client", "viridi/client"]
+  },
+  "exclude": ["dist", "node_modules"]
 }
 ```
 

@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "vite/client"]
+    "types": ["vite/client", "viridi/client"]
   },
   "exclude": ["dist", "node_modules"]
 }

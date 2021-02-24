@@ -1,4 +1,4 @@
-import notes, { Note } from '@viridi';
+import { notes, getNoteByID, Note } from '@viridi';
 
 const dateOptions = {
   year: 'numeric',
@@ -14,7 +14,7 @@ async function renderNote(note: Note) {
     app.innerHTML = `
       <nav>
         <ul>
-          ${Object.values(notes)
+          ${notes
             .map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
             .join('\n')}
         </ul>    
@@ -28,7 +28,7 @@ async function renderNote(note: Note) {
 }
 
 (async () => {
-  const note = Object.values(notes)[0];
+  const note = notes[0];
   renderNote(note);
 
   if (note.logs) {
