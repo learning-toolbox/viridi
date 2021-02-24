@@ -73,6 +73,10 @@ Viridi lets you define frontmatter for each note that is extracted into the `fro
 
 Viridi extracts the title of a note from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. This means that most likely don't want to include any `h1` elements in your markdown files. Hopefully it will help remove the duplication of titles and prevent edge cases when trying to parse the markdown. One special case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the frontmatter to override the title.
 
+#### Wiki-style Links
+
+To make links between notes, Viridi uses a wiki-style links (e.g. `[[Wiki Links]]`) where the title is contained in between double square brackets. Viridi use the title to find the note (case-insensitive). By default, Viridi renders wiki-style links as anchors as follows: `<a data-id="{{ note.id }}" href="{{ note.url }}" class="wiki-link">{{ note.title }}<a>`. We add the `data-id` attribute rather than `id` since a note could be linked multiple times on a page. If `renderWikiLinksAsAnchors` is set to false, then Viridi will render wiki-style links as `<span data-id="{{ note.id }}" class="wiki-link">{{ note.title }}</span>`.
+
 ### Notes
 
 Each note contains meta-data such as the id, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/client.d.ts) for more details.
@@ -92,7 +96,7 @@ const {content, prompt} = await note.data();
 
 #### Note Log/History using Git
 
-If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require Viridi to recreate the knowledge graph for each commit. 😅
+If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. You can enable this feature by setting `gitLogs` to `true` when [configuring the Vite plugin](#plugin-configuration). This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require mean that Viridi has to recreate the knowledge graph for each commit. 😅
 
 #### Link Monitoring (WIP)
 
@@ -100,7 +104,7 @@ Since Viridi created the graph of your notes, we can easily print warnings when 
 
 #### Prompt Extraction (WIP)
 
-This is an opt-in feature that we extract question & answer prompts and cloze-deletion prompts from markdown so that its easy to integrate into embeddable spaced repetition software. Prompts are extracted in the order that they appear.
+This is an opt-in feature that we extract question & answer prompts and cloze-deletion prompts from markdown so that its easy to integrate into embeddable spaced repetition software. Prompts are extracted in the order that they appear. You can enable it by setting `extractPrompts` to `true` when [configuring the Vite plugin](#plugin-configuration).
 
 - Question & answer prompts are removed from the markdown output entirely. Markdown used in the prompt is preserved.
 - For cloze-deletion prompts, each paragraph is checked to see if it contains curly brackets (`{` and `}`). If it does then that entire paragraph is considered one prompt and the brackets are removed from the markdown output. Markdown used in the prompt is preserved.
@@ -129,9 +133,9 @@ const noteData: NoteData = {
 };
 ```
 
-## Plugin Configuration
+## Vite Plugin Configuration
 
-There are a couple of options that you might want to configure to enable certain features. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
+There are a couple of options that you might want to configure to enable certain features. Just pass an object to `viridiPluginVite` to configure the options. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
 
 ## TypeScript integration
 

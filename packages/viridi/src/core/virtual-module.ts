@@ -29,11 +29,11 @@ ${Object.values(notes)
     frontmatter: ${JSON.stringify(frontmatter)},
     linkIds: ${JSON.stringify(linkIds)},
     get links() {
-      return this.linkIds.map(id => notes[id]);
+      return this.linkIds.map(id => notesMap[id]);
     },     
     backlinkIds: ${JSON.stringify(backlinkIds)},
     get backlinks() {
-      return this.backlinkIds.map(id => notes[id]);
+      return this.backlinkIds.map(id => notesMap[id]);
     },
     get lastModified() {
       return new Date('${lastModified}');

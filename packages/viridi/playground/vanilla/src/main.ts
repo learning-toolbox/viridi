@@ -23,12 +23,19 @@ async function renderNote(note: Note) {
       <div>Created: ${note.created.toLocaleDateString('default', dateOptions)}</div>
       <div>Last Updated: ${note.lastModified.toLocaleDateString('default', dateOptions)}</div>
       ${content}
+
+      <h2>Backlinks</h2>
+      <ul>
+        ${note.backlinks
+          .map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
+          .join('\n')}
+      </ul>
     `;
   }
 }
 
 (async () => {
-  const note = notes[0];
+  const note = notes[1];
   renderNote(note);
 
   if (note.logs) {

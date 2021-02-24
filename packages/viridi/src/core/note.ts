@@ -2,7 +2,7 @@ import fs from 'fs';
 import glob from 'fast-glob';
 import { Config } from './config';
 import { getFileLogs, getLatestCommit } from './git';
-import { RenderMarkdown } from './markdown';
+import { MarkdownProcessor } from './markdown';
 import { Notes, NotePathToIdMap, NoteTitleToIdMap } from './types';
 import {
   cyrb53Hash,
@@ -11,11 +11,10 @@ import {
   normalizeURL,
   resolveNote,
 } from './utils';
-import { rankNotes } from './page-rank';
 
 export type RenderNote = ReturnType<typeof createNoteRenderer>;
 
-export function createNoteRenderer(config: Config, renderMarkdown: RenderMarkdown) {
+export function createNoteRenderer(config: Config, markdownProcessor: MarkdownProcessor) {
   return async (
     path: string,
     markdown: string,
@@ -25,25 +24,30 @@ export function createNoteRenderer(config: Config, renderMarkdown: RenderMarkdow
   ) => {
     const note = resolveNote(path, config.root, pathToIdMap, notes);
 
-    const { linkIds, prompts, content, frontmatter } = renderMarkdown(markdown, titleToIdMap);
+    const { linkIds, prompts, content, frontmatter } = markdownProcessor.processContent(
+      markdown,
+      notes,
+      titleToIdMap
+    );
     note.content = content;
     note.prompts = prompts;
     note.linkIds = linkIds;
     note.frontmatter = frontmatter;
 
-    // Override title if it is defined on the frontmatter
     if (
       frontmatter != null &&
       typeof frontmatter === 'object' &&
       typeof frontmatter.title === 'string'
     ) {
+      delete titleToIdMap[note.title];
       note.title = frontmatter.title;
+      titleToIdMap[note.title.trim().toLowerCase()] = note.id;
     }
 
     for (const id of linkIds) {
       const linkedNote = notes[id];
       if (!linkedNote?.backlinkIds.includes(id)) {
-        linkedNote.backlinkIds.push(id);
+        linkedNote.backlinkIds.push(note.id);
       }
     }
 
@@ -75,7 +79,11 @@ export function createNoteRenderer(config: Config, renderMarkdown: RenderMarkdow
   };
 }
 
-export async function parseNotes({ root, directory, prompts }: Config, renderNote: RenderNote) {
+export async function parseNotes(
+  { root, directory, extractPrompts }: Config,
+  markdownProcessor: MarkdownProcessor,
+  renderNote: RenderNote
+) {
   const notes: Notes = {};
   // uses normalized paths
   const pathToIdMap: NotePathToIdMap = {};
@@ -83,6 +91,16 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
   const notesPaths = glob.sync(`${root}/${directory ? directory + '/' : ''}**/*.md`, {
     ignore: ['node_modules/**/*'],
   });
+
+  const noteContents: Record<string, string> = Object.fromEntries(
+    await Promise.all(
+      notesPaths.map(async (filePath) => {
+        const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
+        return [filePath, content];
+      })
+    )
+  );
+
   for (const path of notesPaths) {
     const normalizedPath = normalizeFilePath(root, path);
     const id = cyrb53Hash(path);
@@ -90,15 +108,28 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
     const url = normalizeURL(root, path);
     pathToIdMap[normalizedPath] = id;
 
-    const title = extractTitleFromPath(url);
-    titleToIdMap[title] = id;
+    // Override title if it is defined on the frontmatter, otherwise extract it from the URL
+    let title: string;
+    const content = noteContents[path];
+    const frontmatter = markdownProcessor.processFrontmatter(content);
+    if (
+      frontmatter != null &&
+      typeof frontmatter === 'object' &&
+      typeof frontmatter.title === 'string'
+    ) {
+      title = frontmatter.title;
+    } else {
+      title = extractTitleFromPath(url);
+    }
+
+    titleToIdMap[title.trim().toLowerCase()] = id;
 
     const { birthtimeMs } = fs.statSync(path);
 
     // Create an empty note
     notes[id] = {
       id,
-      path: normalizedPath,
+      path,
       url,
       title,
       lastModified: '',
@@ -106,7 +137,7 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
       created: new Date(Math.round(birthtimeMs)).toString(),
       frontmatter: {},
       content: '',
-      prompts: prompts ? [] : undefined,
+      prompts: extractPrompts ? [] : undefined,
       linkIds: [],
       backlinkIds: [],
     };
@@ -114,7 +145,7 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
 
   await Promise.all(
     notesPaths.map(async (filePath) => {
-      const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
+      const content = noteContents[filePath];
       await renderNote(filePath, content, notes, pathToIdMap, titleToIdMap);
     })
   );

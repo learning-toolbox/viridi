@@ -1,6 +1,6 @@
 import { Plugin } from 'vite';
 import {
-  createMarkdownRenderer,
+  createMarkdownProcessor,
   createNoteRenderer,
   createVirtualNotesModule,
   getFileLogData,
@@ -13,7 +13,7 @@ import {
   RenderNote,
   UserConfig,
   NoteTitleToIdMap,
-  RenderMarkdown,
+  MarkdownProcessor,
 } from '../core';
 
 const viridiFileID = '@viridi';
@@ -25,7 +25,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
   let notes: Notes;
   let pathToIdMap: NotePathToIdMap;
   let titleToIdMap: NoteTitleToIdMap;
-  let renderMarkdown: RenderMarkdown;
+  let markdownProcessor: MarkdownProcessor;
   let renderNote: RenderNote;
 
   return {
@@ -33,8 +33,8 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
 
     configResolved(resolvedConfig) {
       config = resolveConfig(userConfig, resolvedConfig.root);
-      renderMarkdown = createMarkdownRenderer();
-      renderNote = createNoteRenderer(config, renderMarkdown);
+      markdownProcessor = createMarkdownProcessor(config);
+      renderNote = createNoteRenderer(config, markdownProcessor);
     },
 
     resolveId(id) {
@@ -46,7 +46,11 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
     async load(id) {
       if (id === viridiFileID) {
         if (notes === undefined || pathToIdMap === undefined) {
-          ({ notes, pathToIdMap, titleToIdMap } = await parseNotes(config, renderNote));
+          ({ notes, pathToIdMap, titleToIdMap } = await parseNotes(
+            config,
+            markdownProcessor,
+            renderNote
+          ));
         }
 
         return createVirtualNotesModule(config, notes);
@@ -62,7 +66,11 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
             if (log !== undefined) {
               if (log.data === undefined) {
                 const markdown = await getFileLogData(note.path, commit);
-                const { frontmatter, ...data } = renderMarkdown(markdown, titleToIdMap);
+                const { frontmatter, ...data } = markdownProcessor.processContent(
+                  markdown,
+                  notes,
+                  titleToIdMap
+                );
                 log.data = data;
                 log.frontmatter = frontmatter;
               }

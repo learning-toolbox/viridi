@@ -1,11 +1,12 @@
 ---
+title: 'Home'
 stage: 1
 foo: 'bar'
 ---
 
 ## Hello world
 
-Lorem ipsum [[Note 1]] latin latin
+Lorem ipsum latin latin
 
 [[About]]
 

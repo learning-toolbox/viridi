@@ -1,11 +1,7 @@
----
-title: 'Override About Me'
----
-
 ## About me
 
-Lorem ipsum...
-
 [[Home]]
+
+Lorem ipsum...
 
 Does this update? Testing to see if git logs works properly.
