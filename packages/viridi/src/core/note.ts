@@ -26,6 +26,7 @@ export function createNoteRenderer(config: Config, markdownProcessor: MarkdownPr
 
     const { linkIds, prompts, content, frontmatter } = markdownProcessor.processContent(
       markdown,
+      note,
       notes,
       titleToIdMap
     );
@@ -46,7 +47,7 @@ export function createNoteRenderer(config: Config, markdownProcessor: MarkdownPr
 
     for (const id of linkIds) {
       const linkedNote = notes[id];
-      if (!linkedNote?.backlinkIds.includes(id)) {
+      if (linkedNote && !linkedNote.backlinkIds.includes(id)) {
         linkedNote.backlinkIds.push(note.id);
       }
     }
@@ -129,7 +130,7 @@ export async function parseNotes(
     // Create an empty note
     notes[id] = {
       id,
-      path,
+      path: normalizedPath,
       url,
       title,
       lastModified: '',

@@ -15,6 +15,7 @@
     "@types/lodash.startcase": "^4.4.6",
     "@types/node": "^14.14.24",
     "@types/unist": "^2.0.3",
+    "chalk": "^4.1.0",
     "fast-glob": "^3.2.5",
     "lodash.startcase": "^4.4.0",
     "micromark-extension-wiki-link": "^0.0.4",

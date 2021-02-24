@@ -98,7 +98,7 @@ const {content, prompt} = await note.data();
 
 If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. You can enable this feature by setting `gitLogs` to `true` when [configuring the Vite plugin](#plugin-configuration). This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require mean that Viridi has to recreate the knowledge graph for each commit. 😅
 
-#### Link Monitoring (WIP)
+#### Link Monitoring
 
 Since Viridi created the graph of your notes, we can easily print warnings when notes are orphaned (no other notes link to them) or if there is a link to a note that does not exist.
 
@@ -168,15 +168,11 @@ Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/v
 ## Areas of research
 
 - Prefetching links using intersection observer.
-- Enabling more powerful bi-directional links.
-  - How do you modify an anchor in the rendered markdown?
-    - Render `a` by default with note ID, but allow the user to opt in to rendering note links as `span` with the note ID that they can Portal into?
 - Better permalinks?
   - [Inspiration](https://twitter.com/jordwalke/status/1350385770234724353)
 - Transclusion
   - Still fuzzy what this could look like...
 - Search
-- Also looking for feedback on what we could do to make it easier to search.
 - Incremental builds (i.e. better caching in node_modules)
 - Better HMR integration
 
@@ -187,4 +183,4 @@ A large inspiration for Viridi is the ongoing research/experiments by [Andy Matu
 
 ## Why Vite
 
-For now it's sensible to couple Viridi with a build tool. We evaluated a handful of options and decided that the ViteJS aligned closest with our goals of staying unobtrusive to your pick of web technology and providing you with fantastic DX with little to no configuration to support your workflow. Vite can handle building SPA, SSR, or SSG applications (although the latter two are still experimental at the time of this writing).
+Viridi has to be used with a build tool since it only handles "building" your markdown files. We evaluated a handful of options and decided that the ViteJS aligned closest with our goals of staying unobtrusive to your pick of web technology and providing you with fantastic DX with little to no configuration to support your workflow. Vite can handle building SPA, SSR, or SSG applications (although the latter two are still experimental at the time of this writing). We are working towards extracting the core logic of Viridi so that it can be used with other build tools (e.g. Snowpack) and maybe with any build tools?

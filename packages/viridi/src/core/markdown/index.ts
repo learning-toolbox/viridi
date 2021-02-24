@@ -1,4 +1,5 @@
 import yaml from 'yaml';
+import chalk from 'chalk';
 import { Node } from 'unist';
 import unified from 'unified';
 import html from 'remark-html';
@@ -7,9 +8,8 @@ import { select, selectAll } from 'unist-util-select';
 import remarkParse from 'remark-parse';
 import frontmatter from 'remark-frontmatter';
 import { ResolveNoteFromTitle, wikiLinkPlugin } from './remark-wiki-link';
-import { NoteData, NoteFrontmatter, NoteID, Notes, NoteTitleToIdMap, Prompt } from '../types';
+import { Note, NoteData, NoteFrontmatter, NoteID, Notes, NoteTitleToIdMap, Prompt } from '../types';
 import { Config } from '../config';
-// import all from 'mdast-util-to-hast/lib/all';
 import schema from 'hast-util-sanitize/lib/github';
 
 // Allow anchors and spans to have a some extra attributes for wiki links
@@ -29,6 +29,7 @@ export function createMarkdownProcessor(config: Config) {
   const processor = unified().use(remarkParse).use(frontmatter, ['yaml']).use(html, {
     sanitize: schema,
     // TODO: allow user to control how a wiki link is rendered during build.
+    // import all from 'mdast-util-to-hast/lib/all';
     // handlers: {
     //   wikiLink(h, node) {
     //     const tag: string = node.data!.hName as string;
@@ -45,11 +46,24 @@ export function createMarkdownProcessor(config: Config) {
 
   function processContent(
     markdown: string,
+    note: Note,
     notes: Notes,
-    titleToIdMap: NoteTitleToIdMap
+    titleToIdMap: NoteTitleToIdMap,
+    commit?: string
   ): ExtractedNoteData {
     const resolveNoteFromTitle: ResolveNoteFromTitle = (title) => {
       const id = titleToIdMap[title.trim().toLowerCase()];
+      if (id === undefined) {
+        console.log(
+          chalk.yellow.bold('[viridi] ') +
+            chalk.yellow(
+              `Broken link in note '${note.path}' ${
+                commit ? `(commit ${commit})` : ''
+              }: [[${title}]].`
+            )
+        );
+        return undefined;
+      }
       return notes[id];
     };
 

@@ -3,7 +3,7 @@ import { syntax } from 'micromark-extension-wiki-link';
 import { Config } from '../config';
 import { Note } from '../types';
 
-export type ResolveNoteFromTitle = (title: string) => Note;
+export type ResolveNoteFromTitle = (title: string) => Note | undefined;
 
 function fromMarkdown(
   { renderWikiLinksAsAnchors }: Config,
@@ -45,25 +45,45 @@ function fromMarkdown(
     const title = wikiLink.value;
     const note = resolveNoteFromTitle(title);
 
-    wikiLink.data.id = note.id;
-    wikiLink.data.hProperties = {
-      'data-id': note.id,
-      className: 'wiki-link',
-    };
+    if (note !== undefined) {
+      wikiLink.data.id = note.id;
+      wikiLink.data.hProperties = {
+        'data-id': note.id,
+        className: 'wiki-link',
+      };
 
-    if (renderWikiLinksAsAnchors) {
-      wikiLink.data.hName = 'a';
-      wikiLink.data.hProperties.href = note.url;
+      if (renderWikiLinksAsAnchors) {
+        wikiLink.data.hName = 'a';
+        wikiLink.data.hProperties.href = note.url;
+      } else {
+        wikiLink.data.hName = 'span';
+      }
+
+      wikiLink.data.hChildren = [
+        {
+          type: 'text',
+          value: title,
+        },
+      ];
     } else {
-      wikiLink.data.hName = 'span';
-    }
+      wikiLink.data.hProperties = {
+        className: 'wiki-link wiki-link-broken',
+      };
 
-    wikiLink.data.hChildren = [
-      {
-        type: 'text',
-        value: title,
-      },
-    ];
+      if (renderWikiLinksAsAnchors) {
+        wikiLink.data.hName = 'a';
+        wikiLink.data.hProperties.href = '';
+      } else {
+        wikiLink.data.hName = 'span';
+      }
+
+      wikiLink.data.hChildren = [
+        {
+          type: 'text',
+          value: title,
+        },
+      ];
+    }
   }
 
   return {

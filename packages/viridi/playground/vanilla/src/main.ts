@@ -35,7 +35,7 @@ async function renderNote(note: Note) {
 }
 
 (async () => {
-  const note = notes[1];
+  const note = notes[0];
   renderNote(note);
 
   if (note.logs) {

@@ -68,8 +68,10 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
                 const markdown = await getFileLogData(note.path, commit);
                 const { frontmatter, ...data } = markdownProcessor.processContent(
                   markdown,
+                  note,
                   notes,
-                  titleToIdMap
+                  titleToIdMap,
+                  commit
                 );
                 log.data = data;
                 log.frontmatter = frontmatter;

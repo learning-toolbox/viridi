@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { Config } from './config';
 import { rankNotes } from './page-rank';
 import { Note, Notes } from './types';
@@ -20,6 +21,10 @@ ${Object.values(notes)
       rank,
       frontmatter,
     } = note;
+
+    if (backlinkIds.length === 0) {
+      console.log(chalk.blue.bold('[vididi] ') + chalk.blue(`Orphaned note '${note.path}'.`));
+    }
 
     return `  ${id}: {
     id: ${id},
