@@ -11,6 +11,8 @@ export type ClozeDeletionPrompt = {
   content: string;
 };
 
+export type NoteFrontmatter = any;
+
 export type NoteID = number;
 
 export type NoteBase = {
@@ -23,7 +25,7 @@ export type NoteBase = {
   /** The 'importance' of the note determined by the [PageRank](https://en.wikipedia.org/wiki/PageRank) algorithm.  */
   rank: number;
   /** The frontmatter extracted from parsing the markdown file. */
-  frontmatter: Record<string, any>;
+  frontmatter: NoteFrontmatter;
   /** A list of note IDs that this note links to. */
   linkIds: NoteID[];
   /** A list of note IDs that link to this note. */

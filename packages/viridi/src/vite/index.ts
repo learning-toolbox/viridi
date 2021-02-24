@@ -62,7 +62,9 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
             if (log !== undefined) {
               if (log.data === undefined) {
                 const markdown = await getFileLogData(note.path, commit);
-                log.data = renderMarkdown(markdown, titleToIdMap);
+                const { frontmatter, ...data } = renderMarkdown(markdown, titleToIdMap);
+                log.data = data;
+                log.frontmatter = frontmatter;
               }
               return `export default Object.freeze(${JSON.stringify(log.data)});`;
             } else {

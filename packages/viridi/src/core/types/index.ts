@@ -1,9 +1,10 @@
-import { NoteBase, NoteData } from './shared';
+import { NoteBase, NoteData, NoteFrontmatter } from './shared';
 
 export type NoteLog = {
   commit: string;
   modified: string;
   author: string;
+  frontmatter?: NoteFrontmatter;
   data?: NoteData;
 };
 

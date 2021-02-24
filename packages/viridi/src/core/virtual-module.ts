@@ -8,12 +8,25 @@ export function createVirtualNotesModule(config: Config, notes: Notes): string {
   return `const notesMap = {
 ${Object.values(notes)
   .map((note) => {
-    const { id, title, path, backlinkIds, linkIds, url, lastModified, created, rank } = note;
+    const {
+      id,
+      title,
+      path,
+      backlinkIds,
+      linkIds,
+      url,
+      lastModified,
+      created,
+      rank,
+      frontmatter,
+    } = note;
+
     return `  ${id}: {
     id: ${id},
     title: '${title}',
     url: '${url}',
     rank: ${rank},
+    frontmatter: ${JSON.stringify(frontmatter)},
     linkIds: ${JSON.stringify(linkIds)},
     get links() {
       return this.linkIds.map(id => notes[id]);
@@ -62,9 +75,10 @@ function createLogs({ logs, path }: Note): string {
   return `[
     ${logs
       .map(
-        ({ commit, modified, author }) => `{
+        ({ commit, modified, author, frontmatter }) => `{
       commit: '${commit}',
       author: '${author}',
+      frontmatter: ${JSON.stringify(frontmatter)},
       get modified() {
         return new Date('${modified}');
       },

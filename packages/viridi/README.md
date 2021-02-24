@@ -65,7 +65,7 @@ import {
 
 We are using `remark` to parse and analyze the markdown files. Here are some things to keep in mind.
 
-#### Frontmatter (WIP)
+#### Frontmatter
 
 Viridi lets you define frontmatter for each note that is extracted into the `frontmatter` property on each note.
 

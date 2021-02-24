@@ -25,10 +25,20 @@ export function createNoteRenderer(config: Config, renderMarkdown: RenderMarkdow
   ) => {
     const note = resolveNote(path, config.root, pathToIdMap, notes);
 
-    const { linkIds, prompts, content } = renderMarkdown(markdown, titleToIdMap);
+    const { linkIds, prompts, content, frontmatter } = renderMarkdown(markdown, titleToIdMap);
     note.content = content;
     note.prompts = prompts;
     note.linkIds = linkIds;
+    note.frontmatter = frontmatter;
+
+    // Override title if it is defined on the frontmatter
+    if (
+      frontmatter != null &&
+      typeof frontmatter === 'object' &&
+      typeof frontmatter.title === 'string'
+    ) {
+      note.title = frontmatter.title;
+    }
 
     for (const id of linkIds) {
       const linkedNote = notes[id];

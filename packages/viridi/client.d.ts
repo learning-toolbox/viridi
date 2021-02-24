@@ -1,5 +1,5 @@
 declare module '@viridi' {
-  import { NoteBase, NoteData, NoteID } from 'viridi/dist/core/types/shared';
+  import { NoteBase, NoteData, NoteID, NoteFrontmatter } from 'viridi/dist/core/types/shared';
 
   export type Note = Readonly<
     NoteBase & {
@@ -27,6 +27,8 @@ declare module '@viridi' {
     modified: Date;
     /** The Git username of the log. */
     author: string;
+    /** The frontmatter extracted from parsing the markdown file. */
+    frontmatter?: NoteFrontmatter;
     /** A dynamic import that fetches content of the note at the time of the log. */
     data: () => Promise<Readonly<NoteLogData>>;
   };
