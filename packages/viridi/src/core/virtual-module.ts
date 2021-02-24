@@ -1,15 +1,19 @@
 import { Config } from './config';
-import { Note, Notes } from './types/node';
+import { rankNotes } from './page-rank';
+import { Note, Notes } from './types';
 
 export function createVirtualNotesModule(config: Config, notes: Notes): string {
+  rankNotes(notes);
+
   return `const notesMap = {
 ${Object.values(notes)
   .map((note) => {
-    const { id, title, path, backlinkIds, linkIds, url, lastModified, created } = note;
+    const { id, title, path, backlinkIds, linkIds, url, lastModified, created, rank } = note;
     return `  ${id}: {
     id: ${id},
     title: '${title}',
     url: '${url}',
+    rank: ${rank},
     linkIds: ${JSON.stringify(linkIds)},
     get links() {
       return this.linkIds.map(id => notes[id]);
@@ -34,7 +38,7 @@ ${Object.values(notes)
   .join('\n')}
 };
 
-export const notes = Object.values(notesMap);
+export const notes = Object.values(notesMap).sort((a, b) => b.rank - a.rank);
 
 const urlToIdMap = notes.reduce((acc, note) => {
   acc[note.url] = note.id;

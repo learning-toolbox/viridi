@@ -3,7 +3,7 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import html from 'remark-html';
 import { wikiLinkPlugin } from 'remark-wiki-link';
-import { NoteData, NoteID, NoteTitleToIdMap, Prompt } from './types/node';
+import { NoteData, NoteID, NoteTitleToIdMap, Prompt } from './types';
 
 export type MarkdownNode = Node;
 

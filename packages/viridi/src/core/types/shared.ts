@@ -20,6 +20,8 @@ export type NoteBase = {
   url: string;
   /** The title of the note. It is extracted from the file name of the note.  */
   title: string;
+  /** The 'importance' of the note determined by the [PageRank](https://en.wikipedia.org/wiki/PageRank) algorithm.  */
+  rank: number;
   /** The frontmatter extracted from parsing the markdown file. */
   frontmatter: Record<string, any>;
   /** A list of note IDs that this note links to. */

@@ -3,7 +3,7 @@ import glob from 'fast-glob';
 import { Config } from './config';
 import { getFileLogs, getLatestCommit } from './git';
 import { RenderMarkdown } from './markdown';
-import { Notes, NotePathToIdMap, NoteTitleToIdMap } from './types/node';
+import { Notes, NotePathToIdMap, NoteTitleToIdMap } from './types';
 import {
   cyrb53Hash,
   extractTitleFromPath,
@@ -11,6 +11,7 @@ import {
   normalizeURL,
   resolveNote,
 } from './utils';
+import { rankNotes } from './page-rank';
 
 export type RenderNote = ReturnType<typeof createNoteRenderer>;
 
@@ -82,18 +83,19 @@ export async function parseNotes({ root, directory, prompts }: Config, renderNot
     const title = extractTitleFromPath(url);
     titleToIdMap[title] = id;
 
-    const stats = fs.statSync(path);
+    const { birthtimeMs } = fs.statSync(path);
 
     // Create an empty note
     notes[id] = {
       id,
       path: normalizedPath,
       url,
-      lastModified: '',
-      created: new Date(Math.round(stats.birthtimeMs)).toString(),
       title,
-      content: '',
+      lastModified: '',
+      rank: 0,
+      created: new Date(Math.round(birthtimeMs)).toString(),
       frontmatter: {},
+      content: '',
       prompts: prompts ? [] : undefined,
       linkIds: [],
       backlinkIds: [],

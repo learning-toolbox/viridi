@@ -75,7 +75,7 @@ Viridi extracts the title of a note from the name of the markdown file as oppose
 
 ### Notes
 
-Each note contains meta-data such as the id, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks ). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/types/client.d.ts) for more details.
+Each note contains meta-data such as the id, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/client.d.ts) for more details.
 
 #### Code Splitting
 
@@ -86,11 +86,11 @@ const note: Note = notes.<id>;
 const {content, prompt} = await note.data();
 ```
 
-#### Page Ranking (WIP)
+#### Page Ranking
 
 [PageRank](https://en.wikipedia.org/wiki/PageRank) is an algorithm to determine the important of each node in a graph. Each note has a `ranking` property to help you determine the relative importance of each note. By default, the `notes`, `links` and `backlinks` properties are sorted by page rank.
 
-#### Note Log/History using Git (WIP)
+#### Note Log/History using Git
 
 If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require Viridi to recreate the knowledge graph for each commit. 😅
 
@@ -131,7 +131,7 @@ const noteData: NoteData = {
 
 ## Plugin Configuration
 
-There are a couple of options that you might want to configure to enable certain features. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/src/index.ts#L2) type for more details.
+There are a couple of options that you might want to configure to enable certain features. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
 
 ## TypeScript integration
 
@@ -175,6 +175,11 @@ Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/v
 - Also looking for feedback on what we could do to make it easier to search.
 - Incremental builds (i.e. better caching in node_modules)
 - Better HMR integration
+
+## Inspiration
+
+A large inspiration for Viridi is the ongoing research/experiments by [Andy Matuschak
+](https://twitter.com/andy_matuschak), particular [his evergreen notes](https://notes.andymatuschak.org/About_these_notes), [Orbit (embeddable SRS)](https://withorbit.com/), and [Note Link Janitor](https://github.com/andymatuschak/note-link-janitor). [Maggie Appleton's](https://twitter.com/Mappletons) writings and ideas (particularly around [Git logs](#git-logs-wip)) has also been very thought provoking.
 
 ## Why Vite
 
