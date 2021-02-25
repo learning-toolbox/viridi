@@ -23,7 +23,9 @@ ${Object.values(notes)
     } = note;
 
     if (backlinkIds.length === 0) {
-      console.log(chalk.blue.bold('[vididi] ') + chalk.blue(`Orphaned note '${note.path}'.`));
+      console.log(
+        chalk.blue.bold('[vididi] ') + chalk.blue(`Note '${note.path}' has no backlinks.`)
+      );
     }
 
     return `  ${id}: {

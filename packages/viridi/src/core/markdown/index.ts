@@ -57,9 +57,9 @@ export function createMarkdownProcessor(config: Config) {
         console.log(
           chalk.yellow.bold('[viridi] ') +
             chalk.yellow(
-              `Broken link in note '${note.path}' ${
-                commit ? `(commit ${commit})` : ''
-              }: [[${title}]].`
+              `Note '${note.path}'${
+                commit ? ` (commit ${commit})` : ''
+              } has a broken link: [[${title}]].`
             )
         );
         return undefined;
