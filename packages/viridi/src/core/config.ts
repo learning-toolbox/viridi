@@ -1,3 +1,6 @@
+import chalk from 'chalk';
+import simpleGit from 'simple-git';
+
 export type UserConfig = {
   /** A path, relative to the `root` configured in Vite, to the directory containing your notes. By default we use the `root` directory. */
   directory?: string;
@@ -18,9 +21,19 @@ const defaultUserConfig: Partial<UserConfig> = {
 };
 
 export function resolveConfig(userConfig: UserConfig = {}, root: string): Config {
+  let gitLogs = userConfig.gitLogs;
+  if (gitLogs && !simpleGit().checkIsRepo()) {
+    gitLogs = false;
+    console.log(
+      chalk.red.bold('[viridi] ') +
+        chalk.red('`gitLogs` is not available since project is not a valid git repository.')
+    );
+  }
   return {
     ...defaultUserConfig,
     ...userConfig,
     root,
+    // Override user config if the project does use git.
+    gitLogs,
   };
 }

@@ -54,27 +54,27 @@ export function createNoteRenderer(config: Config, markdownProcessor: MarkdownPr
 
     if (config.gitLogs && note.logs === undefined) {
       note.logs = await getFileLogs(path);
-    }
 
-    const latestCommit = await getLatestCommit(path);
-    if (note.lastModified === '') {
-      if (latestCommit !== null) {
-        note.lastModified = latestCommit.modified;
+      const latestCommit = await getLatestCommit(path);
+      if (note.lastModified === '') {
+        if (latestCommit !== null) {
+          note.lastModified = latestCommit.modified;
+        } else {
+          const stats = fs.statSync(path);
+          note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
+        }
       } else {
         const stats = fs.statSync(path);
         note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
-      }
-    } else {
-      const stats = fs.statSync(path);
-      note.lastModified = new Date(Math.round(stats.birthtimeMs)).toString();
 
-      // If the file has been modified since the last commit show the last commit in history
-      if (
-        config.gitLogs &&
-        latestCommit !== null &&
-        note.logs?.[0]?.commit !== latestCommit.commit
-      ) {
-        note.logs?.unshift(latestCommit);
+        // If the file has been modified since the last commit show the last commit in history
+        if (
+          config.gitLogs &&
+          latestCommit !== null &&
+          note.logs?.[0]?.commit !== latestCommit.commit
+        ) {
+          note.logs?.unshift(latestCommit);
+        }
       }
     }
   };

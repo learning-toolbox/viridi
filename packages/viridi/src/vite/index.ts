@@ -57,7 +57,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
       }
 
       // TODO: refactor this logic
-      if (config.gitLogs !== undefined) {
+      if (config.gitLogs) {
         const [_, path, commit] = virtualMarkdownRE.exec(id) || [];
         if (path !== undefined && commit !== undefined) {
           const note = resolveNote(path, config.root, pathToIdMap, notes);
