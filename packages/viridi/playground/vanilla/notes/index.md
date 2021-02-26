@@ -8,6 +8,6 @@ foo: 'bar'
 
 Lorem ipsum latin latin
 
-[[About]]
+[[About | About Me]]
 
 Hello World

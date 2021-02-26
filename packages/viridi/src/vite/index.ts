@@ -20,7 +20,7 @@ const viridiFileID = '@viridi';
 
 const virtualMarkdownRE = /^(.+\.md)\?(\w+)$/;
 
-export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
+export function viridiVitePlugin(userConfig: UserConfig): Plugin {
   let config: Config;
   let notes: Notes;
   let pathToIdMap: NotePathToIdMap;
@@ -32,7 +32,7 @@ export function viridiVitePlugin(userConfig?: UserConfig): Plugin {
     name: 'vite-plugin-viridi',
 
     configResolved(resolvedConfig) {
-      config = resolveConfig(userConfig, resolvedConfig.root);
+      config = resolveConfig(resolvedConfig.root, userConfig);
       markdownProcessor = createMarkdownProcessor(config);
       renderNote = createNoteRenderer(config, markdownProcessor);
     },

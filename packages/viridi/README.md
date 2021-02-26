@@ -18,6 +18,9 @@ $ yarn create @vitejs/app
 $ cd <project-name>
 
 $ yarn add viridi -D
+
+// After adding the following config
+$ yarn dev
 ```
 
 With NPM
@@ -28,6 +31,9 @@ $ npm init @vitejs/app
 $ cd <project-name>
 
 $ npm install @viridi -D
+
+// After adding the following config
+$ yarn dev
 ```
 
 Add a `vite.config.js` file and add Viridi as a plugin
@@ -36,7 +42,7 @@ Add a `vite.config.js` file and add Viridi as a plugin
 const { viridiVitePlugin } = require('viridi');
 
 module.exports = {
-  plugins: [viridiVitePlugin()],
+  plugins: [viridiVitePlugin({ directory: '<path to notes>' })],
 };
 ```
 
@@ -44,7 +50,7 @@ module.exports = {
 
 That's all that it takes to get Viridi setup! The first thing to do is to start adding some markdown files and (ideally) start creating links between them. Read more about how markdown works in Viridi [here](#markdown).
 
-Afterwards, you just import the `@viridi` module to access the graph of your knowledge base in any JavaScript or TypeScript file. Viridi handles importing and parsing your markdown files so that you can easily access and manipulate the underlying knowledge graph.
+Afterwards, you just import the `@viridi` module to access the graph of your knowledge base in any file that you cam import ES modules (i.e JavaScript, TypeScript, JSX, Vue, Svelte, ect.). Viridi handles importing and parsing your markdown files so that you can easily access and manipulate the underlying knowledge graph.
 
 ```ts
 import {
@@ -59,27 +65,80 @@ import {
 // Use the knowledge graph however you desire!
 ```
 
-> Fun fact: `@viridi` is not a actual JS in your file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. It seems to be best practice to use the `@` prefix to note this.
+> Fun fact: `@viridi` is not a actual JS in your file system, it is a [virtual file](https://vitejs.dev/guide/api-plugin.html#importing-a-virtual-file) that is created on the fly. We use the `@` prefix to denote this.
 
 ### Markdown
 
-We are using `remark` to parse and analyze the markdown files. Here are some things to keep in mind.
+We are using `remark` to parse and analyze the markdown files. Here are some things to keep in mind and some ways to configure how to render markdown.
 
 #### Frontmatter
 
-Viridi lets you define frontmatter for each note that is extracted into the `frontmatter` property on each note.
+Viridi lets you define [YAML]() frontmatter for each note that is extracted into the `frontmatter` property on each note.
+
+```md
+## <!-- note.md -->
+
+## stage: 'seedling'
+```
 
 #### Titles
 
-Viridi extracts the title of a note from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. This means that most likely don't want to include any `h1` elements in your markdown files. Hopefully it will help remove the duplication of titles and prevent edge cases when trying to parse the markdown. One special case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the frontmatter to override the title.
+Viridi extracts the title of a note from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. This means that most likely don't want to include any `h1` elements in your markdown files. Hopefully it will help remove the duplication of titles and prevent edge cases when trying to parse the markdown. One case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the [frontmatter](#frontmatter) to override the title extracted from the file name.
+
+Furthermore, the `id` from each note is generated from the path to that note. This means that changing the title of a note will essentially break its reference from other notes. If you would like to modify the title then we recommend overriding the title in the [frontmatter](#frontmatter). In the future, Viridi might be smart enough to automatically detect when a file moves or is renamed and update the references to that note.
 
 #### Wiki-style Links
 
-To make links between notes, Viridi uses a wiki-style links (e.g. `[[Wiki Links]]`) where the title is contained in between double square brackets. Viridi use the title to find the note (case-insensitive). By default, Viridi renders wiki-style links as anchors as follows: `<a data-id="{{ note.id }}" href="{{ note.url }}" class="wiki-link">{{ note.title }}<a>`. We add the `data-id` attribute rather than `id` since a note could be linked multiple times on a page. If `renderWikiLinksAsAnchors` is set to false, then Viridi will render wiki-style links as `<span data-id="{{ note.id }}" class="wiki-link">{{ note.title }}</span>`.
+To make links between notes, Viridi uses a wiki-style links (e.g. `[[Title]]`) where the title is contained in between double square brackets. Viridi use the title to find the note (case insensitive). If you would like to name the like different than the title of a note then you can add an alias `[[Note title | Alias]]`. In this case `Alias` will be rendered and `Note Title` will be used to find the note.
+
+By default, Viridi renders wiki-style links as anchors as follows: `<a data-id="{{ note.id }}" href="{{ note.url }}" class="viridi-wiki-link">{{ alias || note.title }}<a>`. We add the `data-id` attribute rather than `id` since a note could be linked multiple times on a page. You can override how wiki links are rendered to HTML use the `markdown.wikilink.render` setting. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
+
+```ts
+const { viridiVitePlugin } = require('viridi');
+
+module.exports = {
+  plugins: [
+    viridiVitePlugin({
+      directory: 'notes',
+      markdown: {
+        wikiLinks: {
+          // Keep in mind that `note` and `alias` can be `undefined`
+          render(title, note, alias) {
+            if (note === undefined) {
+              return {
+                tag: 'a',
+                attributes: {
+                  href: '#',
+                  className: 'dead-wiki-link',
+                },
+                content: `[[${alias || title}}]]`,
+              };
+            }
+
+            return {
+              tag: 'a',
+              attributes: {
+                'data-id': note.id,
+                href: note.url,
+                className: 'wiki-link',
+              },
+              content: `[[${alias || title}]]`,
+            };
+          },
+        },
+      },
+    }),
+  ],
+};
+```
+
+##### Broken Links
+
+Viridi will [warn you if wiki links are broken](#monitoring-links), but broken links will still be rendered. By default, Viridi renders broken links as `<a class="viridi-broken-wiki-link">{{ title }}<a>`. If you are overriding how wiki links are displayed then make sure to handle the case when the wiki link is broken, this happens when the `note` passed into your render function is `undefined`.
 
 ### Notes
 
-Each note contains meta-data such as the id, URL, and time of creation. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/client.d.ts) for more details.
+Each note contains meta-data such as the id, URL, time of creation, ect. It also contains references to the notes that it references, and the notes that reference it (i.e backlinks). Check out the [client typings](https://github.com/learning-toolbox/viridi/blob/main/packages/vite-plugin-viridi/client.d.ts) for more details.
 
 #### Code Splitting
 
@@ -96,9 +155,9 @@ const {content, prompt} = await note.data();
 
 #### Note Log/History using Git
 
-If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. You can enable this feature by setting `gitLogs` to `true` when [configuring the Vite plugin](#plugin-configuration). This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require mean that Viridi has to recreate the knowledge graph for each commit. 😅
+If your project **uses** `git`, you may be interested in seeing how your notes evolve over time. You can enable this feature by setting `gitLogs` to `true` when [configuring the Vite plugin](#plugin-configuration). This opt-in feature will create a log of changes for each note. Viridi will dynamically load the content of the log, when you want it. You have access to the content of the note, links to other notes, and extracted prompts (see [Prompt Extraction](prompt-extraction-wip)). For now we do not extract backlinks to a log because this would require mean that Viridi has to recreate the knowledge graph for each commit. In the future, it would be interesting to see the knowledge graph for X amount of commits.
 
-#### Link Monitoring
+#### Monitoring Links
 
 Since Viridi created the graph of your notes, we can easily print warnings when notes are orphaned (no other notes link to them) or if there is a link to a note that does not exist.
 
@@ -167,7 +226,8 @@ Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/v
 
 ## Areas of research
 
-- Prefetching links using intersection observer.
+- Pre-fetching links using intersection observer.
+- Pre-rendering script
 - Better permalinks?
   - [Inspiration](https://twitter.com/jordwalke/status/1350385770234724353)
 - Transclusion
@@ -183,4 +243,4 @@ A large inspiration for Viridi is the ongoing research/experiments by [Andy Matu
 
 ## Why Vite
 
-Viridi has to be used with a build tool since it only handles "building" your markdown files. We evaluated a handful of options and decided that the ViteJS aligned closest with our goals of staying unobtrusive to your pick of web technology and providing you with fantastic DX with little to no configuration to support your workflow. Vite can handle building SPA, SSR, or SSG applications (although the latter two are still experimental at the time of this writing). We are working towards extracting the core logic of Viridi so that it can be used with other build tools (e.g. Snowpack) and maybe with any build tools?
+Viridi has to be used with a build tool since it only handles "building" your markdown files. We evaluated a handful of options and decided that the ViteJS aligned closest with our goals of staying unobtrusive to your pick of web technology and providing you with fantastic DX with little to no configuration to support your workflow. Vite can handle building SPA, SSR, or SSG applications (although the latter two are still experimental at the time of this writing). We are working towards extracting the core logic of Viridi so that it can be used with other build tools (e.g. Snowpack) and maybe without any build tools?

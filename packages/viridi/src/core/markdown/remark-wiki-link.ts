@@ -5,14 +5,15 @@ import { Note } from '../types';
 
 export type ResolveNoteFromTitle = (title: string) => Note | undefined;
 
-function fromMarkdown(
-  { renderWikiLinksAsAnchors }: Config,
-  resolveNoteFromTitle: ResolveNoteFromTitle
-) {
-  // const defaultPageResolver = (name) => [name.replace(/ /g, '_').toLowerCase()];
-  // const pageResolver = options.pageResolver || defaultPageResolver;
-  // const defaultHrefTemplate = (permalink) => `/${permalink}`;
+export type WikiLinkNode = {
+  tag: string;
+  attributes?: Record<string, string | number | undefined>;
+  content?: string;
+};
 
+export type RenderWikiLink = (title: string, alias?: string, note?: Note) => WikiLinkNode;
+
+function fromMarkdown(config: Config, resolveNoteFromTitle: ResolveNoteFromTitle) {
   function enterWikiLink(this: any, token: any) {
     this.enter(
       {
@@ -31,7 +32,7 @@ function fromMarkdown(
   function exitWikiLinkAlias(this: any, token: any) {
     const alias = this.sliceSerialize(token);
     const current = top(this.stack);
-    current.data.alias = alias;
+    current.alias = alias;
   }
 
   function exitWikiLinkTarget(this: any, token: any) {
@@ -42,47 +43,40 @@ function fromMarkdown(
 
   function exitWikiLink(this: any, token: any) {
     const wikiLink = this.exit(token);
-    const title = wikiLink.value;
+    const { alias, value: title } = wikiLink;
     const note = resolveNoteFromTitle(title);
 
+    if (config.markdown.wikiLinks.render !== undefined) {
+      const { tag, attributes, content } = config.markdown.wikiLinks.render(title, alias, note);
+      wikiLink.data.hName = tag;
+      if (attributes) {
+        wikiLink.data.hProperties = attributes;
+      }
+
+      if (content) {
+        wikiLink.data.hChildren = [{ type: 'text', value: content }];
+      }
+      return;
+    }
+
+    wikiLink.data.hName = 'a';
+    wikiLink.data.hChildren = [{ type: 'text', value: title }];
     if (note !== undefined) {
       wikiLink.data.id = note.id;
       wikiLink.data.hProperties = {
         'data-id': note.id,
-        className: 'wiki-link',
+        className: 'viridi-wiki-link',
       };
 
-      if (renderWikiLinksAsAnchors) {
-        wikiLink.data.hName = 'a';
-        wikiLink.data.hProperties.href = note.url;
-      } else {
-        wikiLink.data.hName = 'span';
-      }
-
-      wikiLink.data.hChildren = [
-        {
-          type: 'text',
-          value: title,
-        },
-      ];
+      wikiLink.data.hProperties.href = note.url;
     } else {
+      // Rename the type of node so that the dead link is not included in the links/backlinks
+      wikiLink.type = 'deadWikiLink';
       wikiLink.data.hProperties = {
-        className: 'wiki-link wiki-link-broken',
+        className: 'viridi-broken-wiki-link',
       };
 
-      if (renderWikiLinksAsAnchors) {
-        wikiLink.data.hName = 'a';
-        wikiLink.data.hProperties.href = '';
-      } else {
-        wikiLink.data.hName = 'span';
-      }
-
-      wikiLink.data.hChildren = [
-        {
-          type: 'text',
-          value: title,
-        },
-      ];
+      wikiLink.data.hProperties.href = '#';
     }
   }
 
@@ -113,7 +107,7 @@ export const wikiLinkPlugin: Plugin<[Config, ResolveNoteFromTitle]> = function (
     }
   };
 
-  add('micromarkExtensions', syntax());
+  add('micromarkExtensions', syntax({ aliasDivider: ' | ' }));
   add('fromMarkdownExtensions', fromMarkdown(config, resolveNoteFromTitle));
   // add('toMarkdownExtensions', toMarkdown(opts))
 };

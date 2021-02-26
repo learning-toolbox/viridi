@@ -24,7 +24,7 @@ ${Object.values(notes)
 
     if (backlinkIds.length === 0) {
       console.log(
-        chalk.blue.bold('[vididi] ') + chalk.blue(`Note '${note.path}' has no backlinks.`)
+        chalk.blue.bold('[viridi] ') + chalk.blue(`Note '${note.path}' has no backlinks.`)
       );
     }
 

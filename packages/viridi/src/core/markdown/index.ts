@@ -7,7 +7,12 @@ import remove from 'unist-util-remove';
 import { select, selectAll } from 'unist-util-select';
 import remarkParse from 'remark-parse';
 import frontmatter from 'remark-frontmatter';
-import { ResolveNoteFromTitle, wikiLinkPlugin } from './remark-wiki-link';
+import {
+  ResolveNoteFromTitle,
+  wikiLinkPlugin,
+  WikiLinkNode,
+  RenderWikiLink,
+} from './remark-wiki-link';
 import { Note, NoteData, NoteFrontmatter, NoteID, Notes, NoteTitleToIdMap, Prompt } from '../types';
 import { Config } from '../config';
 import schema from 'hast-util-sanitize/lib/github';
@@ -16,7 +21,7 @@ import schema from 'hast-util-sanitize/lib/github';
 schema.attributes.a.push('data-id', 'className');
 schema.attributes.span = ['data-id', 'className'];
 
-export type MarkdownNode = Node;
+export { RenderWikiLink, WikiLinkNode, Note as MarkdownNode };
 
 export type ExtractedNoteData = NoteData & {
   linkIds: NoteID[];
@@ -74,7 +79,7 @@ export function createMarkdownProcessor(config: Config) {
     const frontmatter = extractFrontmatter(parseTree);
 
     let prompts: Prompt[] | undefined;
-    if (config.extractPrompts) {
+    if (config.markdown.extractPrompts) {
       prompts = extractPrompts(parseTree);
     }
 

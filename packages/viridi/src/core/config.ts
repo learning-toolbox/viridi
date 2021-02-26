@@ -1,27 +1,57 @@
 import chalk from 'chalk';
 import simpleGit from 'simple-git';
+import { RenderWikiLink } from './markdown/remark-wiki-link';
 
 export type UserConfig = {
-  /** A path, relative to the `root` configured in Vite, to the directory containing your notes. By default we use the `root` directory. */
-  directory?: string;
-  /** If your project is using `git` then this option generates a log of changes for each note. It is disabled by default since it causes longer development & build times. */
+  /** A path, relative to the `root` configured in Vite, to the directory containing your notes. */
+  directory: string;
+  /**
+   * If your project uses `git` then this option generates a log of changes for each note.
+   * Be warned that this will increase development & build times.
+   */
   gitLogs?: boolean;
-  /** Extract question/answer and close-deletion prompts from your notes. */
-  extractPrompts?: boolean;
-  /** If `true`, Viridi will render wiki links as `<a data-id="{{ note.id }}" href="{{ note.url }}" class="wiki-link">{{ note.title }}<a>`. If `false`, Viridi will render wiki links as `<span data-id="{{ note.id }}" class="wiki-link"></span>` */
-  renderWikiLinksAsAnchors?: boolean;
+  markdown?: {
+    /** Extract question/answer and close-deletion prompts from your notes. */
+    extractPrompts?: boolean;
+    wikiLinks?: {
+      /** Function to render a wiki-style link to HTML. Content must be a string.
+       * `note` is `undefined` when a note with that title cannot be found.
+       * Please note that you must use `className` attribute instead of `class` attribute to specify CSS classes.
+       * @default Renders `<a data-id="{{ note.id }}" href="{{ note.url }}" class="viridi-wiki-link">{{ alias || note.title }}<a>`
+       */
+      render?: RenderWikiLink;
+    };
+  };
 };
 
-export type Config = UserConfig & {
+export type Config = {
   root: string;
+  directory: string;
+  gitLogs: boolean;
+  markdown: Required<Required<UserConfig>['markdown']>;
 };
 
-const defaultUserConfig: Partial<UserConfig> = {
-  renderWikiLinksAsAnchors: true,
-};
+export function resolveConfig(
+  root: string,
+  { directory, markdown, gitLogs = false }: UserConfig
+): Config {
+  if (typeof directory !== 'string') {
+    console.log(chalk.red.bold('[viridi] ') + chalk.red('`directory` must be a string.'));
+  }
 
-export function resolveConfig(userConfig: UserConfig = {}, root: string): Config {
-  let gitLogs = userConfig.gitLogs;
+  // Remove trailing slashes.
+  if (directory.startsWith('/')) {
+    directory.slice(1);
+  }
+
+  if (directory.endsWith('/')) {
+    directory.slice(0, directory.length - 1);
+  }
+
+  if (directory === '') {
+    console.log(chalk.red.bold('[viridi] ') + chalk.red('`directory` cannot be an empty string.'));
+  }
+
   if (gitLogs && !simpleGit().checkIsRepo()) {
     gitLogs = false;
     console.log(
@@ -29,11 +59,15 @@ export function resolveConfig(userConfig: UserConfig = {}, root: string): Config
         chalk.red('`gitLogs` is not available since project is not a valid git repository.')
     );
   }
+
   return {
-    ...defaultUserConfig,
-    ...userConfig,
     root,
-    // Override user config if the project does use git.
+    directory,
     gitLogs,
+    markdown: {
+      extractPrompts: false,
+      wikiLinks: {},
+      ...markdown,
+    },
   };
 }

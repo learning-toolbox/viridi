@@ -81,7 +81,7 @@ export function createNoteRenderer(config: Config, markdownProcessor: MarkdownPr
 }
 
 export async function parseNotes(
-  { root, directory, extractPrompts }: Config,
+  { root, directory, markdown }: Config,
   markdownProcessor: MarkdownProcessor,
   renderNote: RenderNote
 ) {
@@ -138,7 +138,7 @@ export async function parseNotes(
       created: new Date(Math.round(birthtimeMs)).toString(),
       frontmatter: {},
       content: '',
-      prompts: extractPrompts ? [] : undefined,
+      prompts: markdown.extractPrompts ? [] : undefined,
       linkIds: [],
       backlinkIds: [],
     };
