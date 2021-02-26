@@ -102,7 +102,8 @@ function extractFrontmatter(parseTree: Node): any {
 
 function extractLinks(parseTree: Node, titleToIdMap: NoteTitleToIdMap): NoteID[] {
   const wikiLinks = selectAll('wikiLink', parseTree);
-  return wikiLinks.map((link) => link.data!.id as number);
+  // Filter broken links
+  return wikiLinks.filter((link) => link.id !== undefined).map((link) => link.id as number);
 }
 
 function extractPrompts(parseTree: Node): Prompt[] {

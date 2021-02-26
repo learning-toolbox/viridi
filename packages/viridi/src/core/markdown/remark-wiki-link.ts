@@ -46,6 +46,9 @@ function fromMarkdown(config: Config, resolveNoteFromTitle: ResolveNoteFromTitle
     const { alias, value: title } = wikiLink;
     const note = resolveNoteFromTitle(title);
 
+    // Add `id` so we can use it to extract the links in this note
+    wikiLink.id = note?.id;
+
     if (config.markdown.wikiLinks.render !== undefined) {
       const { tag, attributes, content } = config.markdown.wikiLinks.render(title, alias, note);
       wikiLink.data.hName = tag;
