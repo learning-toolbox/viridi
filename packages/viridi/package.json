@@ -20,7 +20,8 @@
   },
   "scripts": {
     "dev": "yarn build -w",
-    "build": "rimraf -rf dist && tsc"
+    "build": "rimraf -rf dist && tsc",
+    "build:demo": "yarn build && cd playground/vanilla && yarn build"
   },
   "peerDependencies": {
     "vite": "^2.0.0"

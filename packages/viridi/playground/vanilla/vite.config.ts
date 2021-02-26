@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [
     viridiVitePlugin({
       directory: 'notes',
+      gitLogs: true,
       markdown: {
         wikiLinks: {
           render(title, alias, note) {
