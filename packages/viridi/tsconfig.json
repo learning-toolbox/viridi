@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "lib": ["ESNext"],
     "types": ["node"],
-    "target": "esnext",
+    "target": "ES2018",
     "declaration": true,
     "outDir": "./dist",
     "sourceMap": true

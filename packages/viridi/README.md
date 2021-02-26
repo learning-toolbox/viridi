@@ -8,7 +8,11 @@ Viridi is a unopinionated, unobtrusive [ViteJS](https://vitejs.dev/) plugin that
 
 Getting familiar with Vite will be important, but it should be pretty easy to get up and running! We highly recommend reading through the [ViteJS documentation](https://vitejs.dev/guide/).
 
+Check out our [demo](https://viridi-vite-demo.netlify.app) (WIP) to see what you can do with Viridi.
+
 ## Installation
+
+We require that you use NodeJS >= 12.
 
 With Yarn
 
