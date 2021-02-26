@@ -19,7 +19,7 @@
     "url": "https://github.com/learning-toolbox/viridi/issues"
   },
   "scripts": {
-    "dev": "tsc -w",
+    "dev": "yarn build -w",
     "build": "rimraf -rf dist && tsc"
   },
   "peerDependencies": {
