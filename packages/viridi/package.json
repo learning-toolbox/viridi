@@ -1,6 +1,6 @@
 {
   "name": "viridi",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "A ViteJS plugin to easily create digital gardens, evergreen notes, ect.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
