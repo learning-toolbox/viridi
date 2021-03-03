@@ -15,11 +15,6 @@ import {
 } from './remark-wiki-link';
 import { Note, NoteData, NoteFrontmatter, NoteID, Notes, NoteTitleToIdMap, Prompt } from '../types';
 import { Config } from '../config';
-import schema from 'hast-util-sanitize/lib/github';
-
-// Allow anchors and spans to have a some extra attributes for wiki links
-schema.attributes.a.push('data-id', 'className');
-schema.attributes.span = ['data-id', 'className'];
 
 export { RenderWikiLink, WikiLinkNode, Note as MarkdownNode };
 
@@ -32,16 +27,7 @@ export type MarkdownProcessor = ReturnType<typeof createMarkdownProcessor>;
 
 export function createMarkdownProcessor(config: Config) {
   const processor = unified().use(remarkParse).use(frontmatter, ['yaml']).use(html, {
-    sanitize: schema,
-    // TODO: allow user to control how a wiki link is rendered during build.
-    // import all from 'mdast-util-to-hast/lib/all';
-    // handlers: {
-    //   wikiLink(h, node) {
-    //     const tag: string = node.data!.hName as string;
-    //     const props = node.data!.hProperties as Record<string, any>;
-    //     return h(node, tag, props, all(h, node));
-    //   },
-    // },
+    sanitize: false,
   });
 
   function processFrontmatter(markdown: string): NoteFrontmatter | undefined {

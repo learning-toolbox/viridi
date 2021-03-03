@@ -72,7 +72,52 @@ export function getNoteFromID(id) {
 export function getNoteFromURL(url) {
   const id = urlToIdMap[url];
   return notesMap[id];
-}`;
+}
+
+const isBrowser = window !== undefined;
+const isNetworkAvailable = navigator.connection && !navigator.connection.saveData && !['slow-2g', '2g'].includes(navigator.connection.effectiveType);
+const isIntersectionObserver = window.IntersectionObserver !== undefined;
+
+const rIC = window.requestIdleCallback || setTimeout;
+const hasFetched = new Set();
+let observer = null;
+export function prefetch() {
+  if (!isBrowser || !isNetworkAvailable || !isIntersectionObserver) {
+    return;
+  }
+
+  if (observer !== null) {
+    observer.disconnect();
+  }
+
+  observer = new IntersectionObserver((entries, ob) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const link = entry.target;
+        const id = parseInt(link.getAttribute('data-note-id'));
+        ob.unobserve(link);
+        if (!hasFetched.has(id)) {
+          hasFetched.add(id);
+          const note = getNoteFromID(id);
+          // TODO: use <link rel="prefetch"> for more optimized prefetch once we can extract the hash from the build output
+          // The browser will cache the JS module initially imported so that the next time it is imported it is already parsed 
+          note.data();
+        }
+      }
+    })
+  })
+
+  rIC(() => {
+    document.querySelectorAll('[data-note-id]').forEach((link) => {
+      const id = parseInt(link.getAttribute('data-note-id'));
+      
+      if (!hasFetched.has(id)) {
+        observer.observe(link);
+      }
+    })
+  })  
+}
+`;
 }
 
 function createLogs({ logs, path }: Note): string {

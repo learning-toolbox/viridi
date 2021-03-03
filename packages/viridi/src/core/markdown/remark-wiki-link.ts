@@ -54,6 +54,11 @@ function fromMarkdown(config: Config, resolveNoteFromTitle: ResolveNoteFromTitle
       wikiLink.data.hName = tag;
       if (attributes) {
         wikiLink.data.hProperties = attributes;
+
+        // Always add `data-note-id` attribute for prefetch
+        if (note !== undefined) {
+          wikiLink.data.hProperties['data-note-id'] = note.id;
+        }
       }
 
       if (content) {
@@ -67,7 +72,7 @@ function fromMarkdown(config: Config, resolveNoteFromTitle: ResolveNoteFromTitle
     if (note !== undefined) {
       wikiLink.data.id = note.id;
       wikiLink.data.hProperties = {
-        'data-id': note.id,
+        'data-note-id': note.id,
         className: 'viridi-wiki-link',
       };
 

@@ -1,4 +1,4 @@
-import { notes, getNoteByID, Note } from '@viridi';
+import { notes, Note, prefetch } from '@viridi';
 
 const dateOptions = {
   year: 'numeric',
@@ -35,7 +35,7 @@ async function renderNote(note: Note) {
 }
 
 (async () => {
-  const note = notes[0];
+  const note = notes[1];
   renderNote(note);
 
   if (note.logs) {
@@ -43,4 +43,10 @@ async function renderNote(note: Note) {
       console.log(await log.data());
     }
   }
+
+  prefetch();
+
+  setTimeout(async () => {
+    console.log(await note.links[0].data());
+  }, 100);
 })();

@@ -12,7 +12,7 @@ declare module '@viridi' {
       /** A list of references that link to the current note. */
       backlinks: Note[];
       /** A dynamic import that fetches actual data of the Note */
-      data: () => Promise<Readonly<NoteData>>;
+      data(): Promise<Readonly<NoteData>>;
       /** A list of git logs that contain previous versions of the note. */
       logs?: Readonly<NoteLog>[];
     }
@@ -38,6 +38,8 @@ declare module '@viridi' {
   export function getNoteByURL(url: string): Note | undefined;
 
   export function getNoteByID(id: NoteID): Note | undefined;
+
+  export function prefetch(): void;
 
   // Forward all types
   export * from 'viridi/dist/core/types/shared';

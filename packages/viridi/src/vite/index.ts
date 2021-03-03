@@ -76,7 +76,7 @@ export function viridiVitePlugin(userConfig: UserConfig): Plugin {
                 log.data = data;
                 log.frontmatter = frontmatter;
               }
-              return `export default Object.freeze(${JSON.stringify(log.data)});`;
+              return `export default ${JSON.stringify(log.data)};`;
             } else {
               throw undefined;
             }
@@ -106,10 +106,10 @@ export function viridiVitePlugin(userConfig: UserConfig): Plugin {
 
         await renderNote(id, content, notes, pathToIdMap, titleToIdMap);
 
-        return `export default Object.freeze(${JSON.stringify({
+        return `export default ${JSON.stringify({
           content: note.content,
           prompts: note.prompts,
-        })});`;
+        })};`;
       }
     },
   };

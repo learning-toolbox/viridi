@@ -95,7 +95,7 @@ Furthermore, the `id` from each note is generated from the path to that note. Th
 
 To make links between notes, Viridi uses a wiki-style links (e.g. `[[Title]]`) where the title is contained in between double square brackets. Viridi use the title to find the note (case insensitive). If you would like to name the like different than the title of a note then you can add an alias `[[Note title | Alias]]`. In this case `Alias` will be rendered and `Note Title` will be used to find the note.
 
-By default, Viridi renders wiki-style links as anchors as follows: `<a data-id="{{ note.id }}" href="{{ note.url }}" class="viridi-wiki-link">{{ alias || note.title }}<a>`. We add the `data-id` attribute rather than `id` since a note could be linked multiple times on a page. You can override how wiki links are rendered to HTML use the `markdown.wikilink.render` setting. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
+By default, Viridi renders wiki-style links as anchors as follows: `<a data-note-id="{{ note.id }}" href="{{ note.url }}" class="viridi-wiki-link">{{ alias || note.title }}<a>`. We add the `data-id` attribute rather than `id` since a note could be linked multiple times on a page. You can override how wiki links are rendered to HTML use the `markdown.wikiLink.render` setting. The `data-note-id` attribute is still added if you override how wiki-links are rendered. Check out the [`UserConfig`](https://github.com/learning-toolbox/viridi/blob/main/packages/viridi/src/core/config.ts#L1) type for more details.
 
 ```ts
 const { viridiVitePlugin } = require('viridi');
@@ -149,9 +149,23 @@ Each note contains meta-data such as the id, URL, time of creation, ect. It also
 Loading the entire knowledge graph and the content for each note will not scale. Viridi solves this problem by automatically code splitting the content of each note. When needed you can easily request that content. The content of note logs are also code split.
 
 ```ts
-const note: Note = notes.<id>;
-const {content, prompt} = await note.data();
+import { notes, Note } from '@viridi';
+
+const note: Note = notes[0];
+const { content, prompt } = await note.data();
 ```
+
+##### Prefetch
+
+Since the knowledge graph is code split by default, we want to make it easy to prefetch data for notes that a user might want to see next without them having to wait for it to load.
+
+```ts
+import { prefetch } from '@viridi';
+
+prefetch();
+```
+
+Calling `prefetch` will create a `IntersectionObserver` to observe when all elements with a `data-note-id` attribute come into view and load the data of the note. Every time you render new wiki-links, it is expected that you call prefetch. By default, all wiki-style links will be prefetched. If you want to prefetch backlinks, just add a `data-note-id` attribute with the note's id and it will automatically prefetched. In cases were the user has [poor cellular connection(https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType) or wants to [save data](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) prefetch will do nothing.
 
 #### Page Ranking
 
@@ -230,8 +244,7 @@ Our [playground](https://github.com/learning-toolbox/viridi/tree/main/packages/v
 
 ## Areas of research
 
-- Pre-fetching links using intersection observer.
-- Pre-rendering script
+- Pre-rendering (SSG) script
 - Better permalinks?
   - [Inspiration](https://twitter.com/jordwalke/status/1350385770234724353)
 - Transclusion
