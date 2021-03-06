@@ -77,12 +77,15 @@ We are using `remark` to parse and analyze the markdown files. Here are some thi
 
 #### Frontmatter
 
-Viridi lets you define [YAML]() frontmatter for each note that is extracted into the `frontmatter` property on each note.
+Viridi lets you define [YAML](#) frontmatter for each note that is extracted into the `frontmatter` property on each note.
 
 ```md
-## <!-- note.md -->
+<!-- note.md -->
+---
+stage: 'seedling'
+---
 
-## stage: 'seedling'
+Lorem ipsum...
 ```
 
 #### Titles
