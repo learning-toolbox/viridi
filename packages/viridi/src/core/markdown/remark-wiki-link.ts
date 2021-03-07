@@ -43,7 +43,8 @@ function fromMarkdown(config: Config, resolveNoteFromTitle: ResolveNoteFromTitle
 
   function exitWikiLink(this: any, token: any) {
     const wikiLink = this.exit(token);
-    const { alias, value: title } = wikiLink;
+    const alias = wikiLink.alias?.trim();
+    const title = wikiLink.value?.trim();
     const note = resolveNoteFromTitle(title);
 
     // Add `id` so we can use it to extract the links in this note
@@ -115,7 +116,7 @@ export const wikiLinkPlugin: Plugin<[Config, ResolveNoteFromTitle]> = function (
     }
   };
 
-  add('micromarkExtensions', syntax({ aliasDivider: ' | ' }));
+  add('micromarkExtensions', syntax({ aliasDivider: '|' }));
   add('fromMarkdownExtensions', fromMarkdown(config, resolveNoteFromTitle));
   // add('toMarkdownExtensions', toMarkdown(opts))
 };

@@ -12,9 +12,9 @@ declare module '@viridi' {
       /** A list of references that link to the current note. */
       backlinks: Note[];
       /** A dynamic import that fetches actual data of the Note */
-      data(): Promise<Readonly<NoteData>>;
+      data(): Promise<NoteData>;
       /** A list of git logs that contain previous versions of the note. */
-      logs?: Readonly<NoteLog>[];
+      logs?: NoteLog[];
     }
   >;
 
@@ -30,7 +30,7 @@ declare module '@viridi' {
     /** The frontmatter extracted from parsing the markdown file. */
     frontmatter?: NoteFrontmatter;
     /** A dynamic import that fetches content of the note at the time of the log. */
-    data: () => Promise<Readonly<NoteLogData>>;
+    data: () => Promise<NoteLogData>;
   };
 
   export const notes: Note[];
@@ -41,6 +41,6 @@ declare module '@viridi' {
 
   export function prefetch(): void;
 
-  // Forward all types
+  // Forward all shared types
   export * from 'viridi/dist/core/types/shared';
 }

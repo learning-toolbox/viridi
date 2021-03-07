@@ -61,7 +61,7 @@ export function createMarkdownProcessor(config: Config) {
     const md = processor().use(wikiLinkPlugin, config, resolveNoteFromTitle);
 
     const parseTree = md.parse(markdown);
-    const linkIds = extractLinks(parseTree, titleToIdMap);
+    const linkIds = extractLinks(parseTree);
     const frontmatter = extractFrontmatter(parseTree);
 
     let prompts: Prompt[] | undefined;
@@ -86,7 +86,7 @@ function extractFrontmatter(parseTree: Node): any {
   return undefined;
 }
 
-function extractLinks(parseTree: Node, titleToIdMap: NoteTitleToIdMap): NoteID[] {
+function extractLinks(parseTree: Node): NoteID[] {
   const wikiLinks = selectAll('wikiLink', parseTree);
   // Filter broken links
   return wikiLinks.filter((link) => link.id !== undefined).map((link) => link.id as number);
