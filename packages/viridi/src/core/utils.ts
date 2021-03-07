@@ -1,4 +1,3 @@
-import startCase from 'lodash.startcase';
 import { Note, Notes, NotePathToIdMap } from './types';
 
 // A hash function
@@ -30,7 +29,7 @@ export function normalizeURL(root: string, path: string): string {
 }
 
 export function extractTitleFromPath(path: string): string {
-  return startCase(path.slice(path.lastIndexOf('/') + 1));
+  return path.slice(path.lastIndexOf('/') + 1);
 }
 
 export function resolveNote(

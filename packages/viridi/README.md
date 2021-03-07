@@ -90,7 +90,16 @@ Lorem ipsum...
 
 #### Titles
 
-Viridi extracts the title of a note from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. This means that most likely don't want to include any `h1` elements in your markdown files. Hopefully it will help remove the duplication of titles and prevent edge cases when trying to parse the markdown. One case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the [frontmatter](#frontmatter) to override the title extracted from the file name.
+Viridi extracts the title of a note (**as is**) from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. Hopefully this will help remove the duplication of titles in your markdown and prevent edge cases when trying to parse the markdown with multiple `h1` elements. One case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the [frontmatter](#frontmatter) to override the title extracted from the file name.
+
+```md
+<!-- How Viridi Titles Work.md -->
+---
+title: 'Titles'
+---
+
+Lorem ipsum...
+```
 
 Furthermore, the `id` from each note is generated from the path to that note. This means that changing the title of a note will essentially break its reference from other notes. If you would like to modify the title then we recommend overriding the title in the [frontmatter](#frontmatter). In the future, Viridi might be smart enough to automatically detect when a file moves or is renamed and update the references to that note.
 
