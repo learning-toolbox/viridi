@@ -35,9 +35,9 @@ declare module '@viridi' {
 
   export const notes: Note[];
 
-  export function getNoteByURL(url: string): Note | undefined;
+  export function getNoteFromURL(url: string): Note | undefined;
 
-  export function getNoteByID(id: NoteID): Note | undefined;
+  export function getNoteFromID(id: NoteID): Note | undefined;
 
   export function prefetch(): void;
 
