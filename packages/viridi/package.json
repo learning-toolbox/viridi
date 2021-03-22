@@ -29,6 +29,8 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "fast-glob": "^3.2.5",
+    "mdast-util-from-markdown": "^0.8.5",
+    "mdast-util-to-markdown": "^0.6.5",
     "micromark-extension-wiki-link": "^0.0.4",
     "pagerank.js": "^1.0.2",
     "remark": "^13.0.0",
@@ -39,6 +41,7 @@
     "simple-git": "^2.35.1",
     "unified": "^9.2.0",
     "unist-util-find": "^1.0.2",
+    "unist-util-parents": "^1.0.3",
     "unist-util-remove": "^2.0.1",
     "unist-util-select": "^3.0.4",
     "yaml": "^1.10.0"

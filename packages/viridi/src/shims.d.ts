@@ -1,3 +1,4 @@
-declare module 'unist-util-remove';
-declare module 'micromark-extension-wiki-link';
-declare module 'pagerank.js';
+declare module "pagerank.js";
+declare module "unist-util-remove";
+declare module "unist-util-parents";
+declare module "micromark-extension-wiki-link";

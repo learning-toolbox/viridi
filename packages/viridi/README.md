@@ -46,7 +46,7 @@ Add a `vite.config.js` file and add Viridi as a plugin
 const { viridiVitePlugin } = require('viridi');
 
 module.exports = {
-  plugins: [viridiVitePlugin({ directory: '<path to notes>' })],
+	plugins: [viridiVitePlugin({ directory: '<path to notes>' })],
 };
 ```
 
@@ -58,12 +58,12 @@ Afterwards, you just import the `@viridi` module to access the graph of your kno
 
 ```ts
 import {
-  /** List of notes sorted by page rank. Each note contains references to the notes that it links and the notes that link it. */
-  notes,
-  /** Utility function to get note by its ID */
-  getNoteByID,
-  /** Utility function to get note by its URL */
-  getNoteByURL,
+	/** List of notes sorted by page rank. Each note contains references to the notes that it links and the notes that link it. */
+	notes,
+	/** Utility function to get note by its ID */
+	getNoteByID,
+	/** Utility function to get note by its URL */
+	getNoteByURL,
 } from '@viridi';
 
 // Use the knowledge graph however you desire!
@@ -80,10 +80,9 @@ We are using `remark` to parse and analyze the markdown files. Here are some thi
 Viridi lets you define [YAML](#) frontmatter for each note that is extracted into the `frontmatter` property on each note.
 
 ```md
-<!-- note.md -->
----
-stage: 'seedling'
----
+## <!-- note.md -->
+
+## stage: 'seedling'
 
 Lorem ipsum...
 ```
@@ -93,10 +92,9 @@ Lorem ipsum...
 Viridi extracts the title of a note (**as is**) from the name of the markdown file as opposed to extracting the first `h1` that it encounters in the markdown. Hopefully this will help remove the duplication of titles in your markdown and prevent edge cases when trying to parse the markdown with multiple `h1` elements. One case to consider is `index.md`, where the title of the file will become the name of the parent directory. Add a `title` property to the [frontmatter](#frontmatter) to override the title extracted from the file name.
 
 ```md
-<!-- How Viridi Titles Work.md -->
----
-title: 'Titles'
----
+## <!-- How Viridi Titles Work.md -->
+
+## title: 'Titles'
 
 Lorem ipsum...
 ```
@@ -113,38 +111,38 @@ By default, Viridi renders wiki-style links as anchors as follows: `<a data-note
 const { viridiVitePlugin } = require('viridi');
 
 module.exports = {
-  plugins: [
-    viridiVitePlugin({
-      directory: 'notes',
-      markdown: {
-        wikiLinks: {
-          // Keep in mind that `note` and `alias` can be `undefined`
-          render(title, note, alias) {
-            if (note === undefined) {
-              return {
-                tag: 'a',
-                attributes: {
-                  href: '#',
-                  className: 'dead-wiki-link',
-                },
-                content: `[[${alias || title}}]]`,
-              };
-            }
+	plugins: [
+		viridiVitePlugin({
+			directory: 'notes',
+			markdown: {
+				wikiLinks: {
+					// Keep in mind that `note` and `alias` can be `undefined`
+					render(title, note, alias) {
+						if (note === undefined) {
+							return {
+								tag: 'a',
+								attributes: {
+									href: '#',
+									className: 'dead-wiki-link',
+								},
+								content: `[[${alias || title}}]]`,
+							};
+						}
 
-            return {
-              tag: 'a',
-              attributes: {
-                'data-id': note.id,
-                href: note.url,
-                className: 'wiki-link',
-              },
-              content: `[[${alias || title}]]`,
-            };
-          },
-        },
-      },
-    }),
-  ],
+						return {
+							tag: 'a',
+							attributes: {
+								'data-id': note.id,
+								href: note.url,
+								className: 'wiki-link',
+							},
+							content: `[[${alias || title}]]`,
+						};
+					},
+				},
+			},
+		}),
+	],
 };
 ```
 
@@ -191,15 +189,18 @@ If your project **uses** `git`, you may be interested in seeing how your notes e
 
 Since Viridi created the graph of your notes, we can easily print warnings when notes are orphaned (no other notes link to them) or if there is a link to a note that does not exist.
 
-#### Prompt Extraction (WIP)
+#### Prompt Extraction
 
-This is an opt-in feature that we extract question & answer prompts and cloze-deletion prompts from markdown so that its easy to integrate into embeddable spaced repetition software. Prompts are extracted in the order that they appear. You can enable it by setting `extractPrompts` to `true` when [configuring the Vite plugin](#plugin-configuration).
+Viridi enables you to seamlessly extract prompts to be used in an spaced repitition system directly from your notes. There are already a handeful of embedabble, web-based SR systems that exist, but expect Viridi to have its own in the near future. Viridi uses a superset of Markdown to enable this feature. You can enable it by setting `extractPrompts` to `true` when [configuring the Vite plugin](#plugin-configuration). There are two types of prompts currently supported:
 
-- Question & answer prompts are removed from the markdown output entirely. Markdown used in the prompt is preserved.
-- For cloze-deletion prompts, each paragraph is checked to see if it contains curly brackets (`{` and `}`). If it does then that entire paragraph is considered one prompt and the brackets are removed from the markdown output. Markdown used in the prompt is preserved.
+- Question & answer prompts:
+  - The question is _exactly_ prefixed with `Q. ` and the answer should be _exactly_ prefixed with `A. `. Inline markdown attributes like bold, italic, ect. will be preserved as markdown. Wiki-links, images, and other media are not yet supported.
+  - QA prompts will be removed from the markdown output entirely.
+- [Cloze-deletion](https://en.wikipedia.org/wiki/Cloze_test) prompts:
+  - Any paragraph that starts _exactly_ with `C. ` is considered a cloze deletion prompt. This could be a regular paragraph or a paragraph that exists as a list item. Any curly brackets (`{` and `}`) are now considered markers of the close deletion. Even if multiple close deletions exist in the same paragraph, each paragraph is considered one prompt. The brackets in that paragraph are removed from the markdown output, but the markdown is preserved. Markdown is also preserved in the prompt.
 
 ```md
-Lorem {ipsum} dolor {sit amet}.
+C: Lorem {ipsum} dolor {sit amet}.
 
 Q: When is _"Lorem Ipsum"_ text used?
 A: Its used as a placeholder.
@@ -207,18 +208,18 @@ A: Its used as a placeholder.
 
 ```ts
 const noteData: NoteData = {
-  content: '<p>Lorem ipsum dolor sit amet.</p>',
-  prompts: [
-    {
-      type: 'cloze',
-      content: 'Lorem {ipsum} dolor {sit amet}.',
-    },
-    {
-      type: 'qa',
-      question: 'When is *"Lorem Ipsum"* text used?',
-      answer: 'Its used as a placeholder.',
-    },
-  ],
+	content: '<p>Lorem ipsum dolor sit amet.</p>',
+	prompts: [
+		{
+			type: 'cloze',
+			content: 'Lorem {ipsum} dolor {sit amet}.',
+		},
+		{
+			type: 'qa',
+			question: 'When is *"Lorem Ipsum"* text used?',
+			answer: 'Its used as a placeholder.',
+		},
+	],
 };
 ```
 
@@ -235,7 +236,7 @@ import { defineConfig } from 'vite';
 import { viridiVitePlugin } from 'viridi';
 
 export default defineConfig({
-  plugins: [viridiVitePlugin()],
+	plugins: [viridiVitePlugin()],
 });
 ```
 
@@ -243,10 +244,10 @@ For client typings please add the following to you `tsconfig.json`:
 
 ```json
 {
-  "compilerOptions": {
-    "types": ["vite/client", "viridi/client"]
-  },
-  "exclude": ["dist", "node_modules"]
+	"compilerOptions": {
+		"types": ["vite/client", "viridi/client"]
+	},
+	"exclude": ["dist", "node_modules"]
 }
 ```
 

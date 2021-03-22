@@ -6,8 +6,10 @@ foo: 'bar'
 
 ## Hello world
 
-Lorem ipsum latin latin
+C. **foo bar {baz}**. _This is a really long {cloze deletion_ prompt} that I am testing [[wiki link]].
 
-[[About | About Me]]
+Q. Does **this** work again?
+foo
+bar
 
-Hello World
+A. Yes!

@@ -1,22 +1,23 @@
 import { notes, Note, prefetch } from '@viridi';
 
 const dateOptions = {
-  year: 'numeric',
-  month: 'short',
-  day: '2-digit',
+	year: 'numeric',
+	month: 'short',
+	day: '2-digit',
 } as const;
 
 const app = document.querySelector('#app');
 
 async function renderNote(note: Note) {
-  if (app) {
-    const { content } = await note.data();
-    app.innerHTML = `
+	if (app) {
+		const { content, prompts } = await note.data();
+		console.log(prompts);
+		app.innerHTML = `
       <nav>
         <ul>
           ${notes
-            .map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
-            .join('\n')}
+						.map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
+						.join('\n')}
         </ul>    
       </nav>
       <h1>${note.title}</h1>
@@ -27,26 +28,22 @@ async function renderNote(note: Note) {
       <h2>Backlinks</h2>
       <ul>
         ${note.backlinks
-          .map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
-          .join('\n')}
+					.map((note) => `<li><a href="${note.url}">${note.title} (${note.id})</a></li>`)
+					.join('\n')}
       </ul>
     `;
-  }
+	}
 }
 
 (async () => {
-  const note = notes[1];
-  renderNote(note);
+	const note = notes[0];
+	renderNote(note);
 
-  if (note.logs) {
-    for (const log of note.logs) {
-      console.log(await log.data());
-    }
-  }
+	if (note.logs) {
+		for (const log of note.logs) {
+			console.log(await log.data());
+		}
+	}
 
-  prefetch();
-
-  setTimeout(async () => {
-    console.log(await note.links[0].data());
-  }, 100);
+	prefetch();
 })();
